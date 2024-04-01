@@ -134,10 +134,10 @@ public class YourService extends KiboRpcService {
         Kinematics kinematics = null;
 
         currentPositionConfidence = Kinematics.Confidence.GOOD;
-        final double [] kIZ2_min_data = {9.5, -10.5, 4.02};
-        final double [] kIZ2_max_data = {10.5, -9.6, 4.8};
         final double [] kIZ1_min_data = {10.3, -10.2, 4.32};
-        final double [] kIZ1_max_data = {11.55 ,-6.0, 5.57};
+        final double [] kIZ1_max_data = {11.44, -6, 5.57};
+        final double [] kIZ2_min_data = {9.5, -10.5, 4.02};
+        final double [] kIZ2_max_data = {10.5 ,-9.6, 4.8};
 
         final Vector kIZ2_min = new Vector(kIZ2_min_data);
         final Vector kIZ2_max = new Vector(kIZ2_max_data);
