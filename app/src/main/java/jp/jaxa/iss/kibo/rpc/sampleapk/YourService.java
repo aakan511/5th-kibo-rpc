@@ -7,11 +7,15 @@ import gov.nasa.arc.astrobee.types.Quaternion;
 
 import org.opencv.core.Mat;
 
+import static jp.jaxa.iss.kibo.rpc.sampleapk.Movement.moveAstrobee;
+
 /**
  * Class meant to handle commands from the Ground Data System and execute them in Astrobee.
  */
 
 public class YourService extends KiboRpcService {
+
+    public static final int LOOP_MAX = 4;
     @Override
     protected void runPlan1(){
         // The mission starts.
@@ -20,7 +24,7 @@ public class YourService extends KiboRpcService {
         // Move to a point.
         Point point = new Point(10.9d, -9.92284d, 5.195d);
         Quaternion quaternion = new Quaternion(0f, 0f, -0.707f, 0.707f);
-        api.moveTo(point, quaternion, false);
+        moveAstrobee(point, quaternion, 'A', true, "AaronDebug", api);
 
         // Get a camera image.
         Mat image = api.getMatNavCam();
