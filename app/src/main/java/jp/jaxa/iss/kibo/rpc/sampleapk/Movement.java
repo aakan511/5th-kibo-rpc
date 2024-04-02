@@ -12,11 +12,12 @@ import static jp.jaxa.iss.kibo.rpc.sampleapk.YourService.LOOP_MAX;
 
 
 public final class Movement {
+    public static KiboRpcApi api;
 
     private Movement() {}
 
     public static Kinematics.Confidence moveAstrobee(Point point, Quaternion quaternion, char moveType, Boolean printRobotPosition,
-                                                 String TAG, KiboRpcApi api)
+                                                 String TAG)
     {
         //Qua_x 0.7071068 Astrobee spin right
         //QUa_x -0.7071068 Astrobee spin left

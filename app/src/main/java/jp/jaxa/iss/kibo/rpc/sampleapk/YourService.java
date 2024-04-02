@@ -20,11 +20,12 @@ public class YourService extends KiboRpcService {
     protected void runPlan1(){
         // The mission starts.
         api.startMission();
-
+        Movement.api = api;
+        Vision.api = api;
         // Move to a point.
         Point point = new Point(10.9d, -9.92284d, 5.195d);
         Quaternion quaternion = new Quaternion(0f, 0f, -0.707f, 0.707f);
-        moveAstrobee(point, quaternion, 'A', true, "AaronDebug", api);
+        moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
 
         // Get a camera image.
         Mat image = api.getMatNavCam();
