@@ -23,13 +23,12 @@ public final class Vision {
 
     private Vision() {}
 
-    public static Mat cropPage(Mat img)
+    public static Mat cropPage(Mat image)
     {
-        Rect rectCrop = new Rect(img.width()/4, img.height()/4, img.width()/2, img.height()/2);
-        Mat image = new Mat(img, rectCrop);
-        Core.flip(image, image, -1);
-        QRCodeDetector decoder = new QRCodeDetector();
-        api.saveMatImage(image, "QRCodes_Undistort_Flip.png");
+        Rect rectCrop;// = new Rect(img.width()/4, img.height()/4, img.width()/2, img.height()/2);
+//        Mat image = new Mat(img, rectCrop);
+//        Core.flip(image, image, -1);
+//        api.saveMatImage(image, "QRCodes_Undistort_Flip.png");
 
         Mat thresh = new Mat();
         Imgproc.threshold(image, thresh, 230, 255, Imgproc.THRESH_BINARY);

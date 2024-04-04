@@ -27,8 +27,58 @@ public class YourService extends KiboRpcService {
         Quaternion quaternion = new Quaternion(0f, 0f, -0.707f, 0.707f);
         moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
 
+        quaternion = new Quaternion(0f, 0f, -0.707f, 0.707f);
+        point = new Point(10.925, -8.6, 5.195);
+        //moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
+
+
         // Get a camera image.
         Mat image = api.getMatNavCam();
+        api.saveMatImage(image, "front1");
+        Mat target1 = Vision.cropPage(image);
+        api.saveMatImage(target1, "target1_crop");
+
+        image = api.getMatDockCam();
+        api.saveMatImage(image, "back1");
+        Mat target4 = Vision.cropPage(image);
+        api.saveMatImage(target4, "target4_crop");
+
+        point = new Point(10.925, -8.6, 5.195);
+        Quaternion quaternion1 = new Quaternion(0f, 0.707f, 0f, 0.707f);
+        //moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
+
+        for(double x = 10.60; x <= 11.5; x+=.1) {
+            point = new Point(x, -8.6, 5.195);
+            moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
+
+            for (float i = 0f; i < .4f; i+=.05f) {
+                api.flashlightControlFront(i);
+                api.flashlightControlBack(i);
+                api.saveMatImage(api.getMatNavCam(), "" + "front1_" + x +"_" + intify(i) + ".png");
+                api.saveMatImage(api.getMatDockCam(), "" + "back1_" + x +"_" + intify(i) + ".png");
+
+            }
+
+            moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
+
+            for (float i = 0f; i < .4f; i+=.05f) {
+                api.flashlightControlFront(i);
+                api.flashlightControlBack(i);
+                api.saveMatImage(api.getMatNavCam(), "" + "front2_" + x +"_" + intify(i) + ".png");
+
+            }
+        }
+
+        // Get a camera image.
+//        image = api.getMatNavCam();
+//        api.saveMatImage(image, "front2");
+//        Mat target23 = Vision.cropPage(image);
+//        api.saveMatImage(target23, "target23_crop");
+//
+//        image = api.getMatDockCam();
+//        api.saveMatImage(image, "back2");
+
+
 
         /* *********************************************************************** */
         /* Write your code to recognize type and number of items in the each area! */
@@ -69,8 +119,7 @@ public class YourService extends KiboRpcService {
         // write your plan 3 here.
     }
 
-    // You can add your method.
-    private String yourMethod(){
-        return "your method";
+    public static String intify(float f) {
+        return "" + (int) (f * 100);
     }
 }
