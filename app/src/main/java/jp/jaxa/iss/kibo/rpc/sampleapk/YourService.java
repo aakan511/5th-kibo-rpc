@@ -33,15 +33,15 @@ public class YourService extends KiboRpcService {
 
 
         // Get a camera image.
-        Mat image = api.getMatNavCam();
-        api.saveMatImage(image, "front1");
-        Mat target1 = Vision.cropPage(image);
-        api.saveMatImage(target1, "target1_crop");
-
-        image = api.getMatDockCam();
-        api.saveMatImage(image, "back1");
-        Mat target4 = Vision.cropPage(image);
-        api.saveMatImage(target4, "target4_crop");
+//        Mat image = api.getMatNavCam();
+//        api.saveMatImage(image, "front1");
+//        Mat target1 = Vision.cropPage(image);
+//        api.saveMatImage(target1, "target1_crop");
+//
+//        image = api.getMatDockCam();
+//        api.saveMatImage(image, "back1");
+//        Mat target4 = Vision.cropPage(image);
+//        api.saveMatImage(target4, "target4_crop");
 
         point = new Point(10.925, -8.6, 5.195);
         Quaternion quaternion1 = new Quaternion(0f, 0.707f, 0f, 0.707f);
@@ -51,22 +51,25 @@ public class YourService extends KiboRpcService {
             point = new Point(x, -8.6, 5.195);
             moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
 
-            for (float i = 0f; i < .4f; i+=.05f) {
-                api.flashlightControlFront(i);
-                api.flashlightControlBack(i);
-                api.saveMatImage(api.getMatNavCam(), "" + "front1_" + x +"_" + intify(i) + ".png");
-                api.saveMatImage(api.getMatDockCam(), "" + "back1_" + x +"_" + intify(i) + ".png");
-
-            }
+//            for (float i = 0f; i < .4f; i+=.05f) {
+//                api.flashlightControlFront(i);
+//                api.flashlightControlBack(i);
+//                api.saveMatImage(api.getMatNavCam(), "" + "front1_" + x +"_" + intify(i) + ".png");
+//                api.saveMatImage(api.getMatDockCam(), "" + "back1_" + x +"_" + intify(i) + ".png");
+//
+//            }
+            api.saveMatImage(api.getMatNavCam(), "" + "front1_" + x + ".png");
+            api.saveMatImage(api.getMatDockCam(), "" + "back1_" + x + ".png");
 
             moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
 
-            for (float i = 0f; i < .4f; i+=.05f) {
-                api.flashlightControlFront(i);
-                api.flashlightControlBack(i);
-                api.saveMatImage(api.getMatNavCam(), "" + "front2_" + x +"_" + intify(i) + ".png");
-
-            }
+//            for (float i = 0f; i < .4f; i+=.05f) {
+//                api.flashlightControlFront(i);
+//                api.flashlightControlBack(i);
+//                api.saveMatImage(api.getMatNavCam(), "" + "front2_" + x +"_" + intify(i) + ".png");
+//
+//            }
+            api.saveMatImage(api.getMatNavCam(), "" + "front2_" + x + ".png");
         }
 
         // Get a camera image.
