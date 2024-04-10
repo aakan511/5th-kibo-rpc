@@ -1,5 +1,7 @@
 package jp.jaxa.iss.kibo.rpc.sampleapk;
 
+import android.graphics.Bitmap;
+
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcService;
 
 import gov.nasa.arc.astrobee.types.Point;
@@ -21,7 +23,11 @@ public class YourService extends KiboRpcService {
         // The mission starts.
         api.startMission();
         Movement.api = api;
-        Vision.api = api;
+        try {
+            new Vision(api, this.getApplicationContext());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         // Move to a point.
         Point point = new Point(10.9d, -9.92284d, 5.195d);
         Quaternion quaternion = new Quaternion(0f, 0f, -0.707f, 0.707f);
@@ -29,7 +35,11 @@ public class YourService extends KiboRpcService {
 
         quaternion = new Quaternion(0f, 0f, -0.707f, 0.707f);
         point = new Point(10.925, -8.6, 5.195);
-        //moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
+        moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
+
+        Bitmap img1 = api.getBitmapNavCam();
+        api.saveBitmapImage(img1, "target1_bitmap");
+        Vision.detect(img1);
 
 
         // Get a camera image.
