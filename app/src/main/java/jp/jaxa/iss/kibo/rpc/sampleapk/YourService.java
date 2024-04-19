@@ -39,7 +39,7 @@ public class YourService extends KiboRpcService {
 
         Bitmap img1 = api.getBitmapNavCam();
         api.saveBitmapImage(img1, "target1_bitmap");
-        Vision.detect(img1);
+//        Vision.detect(img1);
 
 
         // Get a camera image.

@@ -15,11 +15,11 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.objdetect.QRCodeDetector;
-import org.tensorflow.lite.support.image.TensorImage;
-import org.tensorflow.lite.task.core.BaseOptions;
-import org.tensorflow.lite.task.vision.detector.Detection;
-import org.tensorflow.lite.task.vision.detector.ObjectDetector;
+//import org.opencv.objdetect.QRCodeDetector;
+//import org.tensorflow.lite.support.image.TensorImage;
+//import org.tensorflow.lite.task.core.BaseOptions;
+//import org.tensorflow.lite.task.vision.detector.Detection;
+//import org.tensorflow.lite.task.vision.detector.ObjectDetector;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,22 +33,22 @@ import static android.content.ContentValues.TAG;
 public final class Vision {
     public static KiboRpcApi api;
 
-    public static ObjectDetector.ObjectDetectorOptions options;
-
-    public static ObjectDetector objectDetector;
+//    public static ObjectDetector.ObjectDetectorOptions options;
+//
+//    public static ObjectDetector objectDetector;
 
     public static String modelFile = "ogModel.tflite";
 
     public Vision(KiboRpcApi api, Context context) throws IOException {
         this.api = api;
-        options =
-                ObjectDetector.ObjectDetectorOptions.builder()
-                        .setBaseOptions(BaseOptions.builder().useGpu().build())
-                        .setMaxResults(1)
-                        .build();
-        objectDetector =
-                ObjectDetector.createFromFileAndOptions(
-                       context , modelFile, options);
+//        options =
+//                ObjectDetector.ObjectDetectorOptions.builder()
+//                        .setBaseOptions(BaseOptions.builder().useGpu().build())
+//                        .setMaxResults(1)
+//                        .build();
+//        objectDetector =
+//                ObjectDetector.createFromFileAndOptions(
+//                       context , modelFile, options);
 
     }
 
@@ -85,30 +85,30 @@ public final class Vision {
         return dst;
     }
 
-    public static List<Detection> detect(Bitmap image) {
-        if (api == null || options == null || objectDetector == null || modelFile == null) {
-            throw new IllegalArgumentException("Vision was not started properly");
-        }
-        TensorImage img = TensorImage.fromBitmap(image);
-
-        List<Detection> results = objectDetector.detect(img);
-
-        Canvas c = new Canvas(image);
-        Paint paint = new Paint();
-        paint.setColor(Color.RED);
-        paint.setStrokeWidth(5);
-
-        for (Detection d : results) {
-//            float left = d.getBoundingBox().left;
-//            float top = d.getBoundingBox().top;
-//            float right = d.getBoundingBox().right;
-//            float bottom = d.getBoundingBox().bottom;
-
-            c.drawRect(d.getBoundingBox(), paint);
-            Log.i(TAG, d.toString());
-
-        }
-        api.saveBitmapImage(image, "testingDetection");
-        return results;
-    }
+//    public static List<Detection> detect(Bitmap image) {
+//        if (api == null || options == null || objectDetector == null || modelFile == null) {
+//            throw new IllegalArgumentException("Vision was not started properly");
+//        }
+//        TensorImage img = TensorImage.fromBitmap(image);
+//
+//        List<Detection> results = objectDetector.detect(img);
+//
+//        Canvas c = new Canvas(image);
+//        Paint paint = new Paint();
+//        paint.setColor(Color.RED);
+//        paint.setStrokeWidth(5);
+//
+//        for (Detection d : results) {
+////            float left = d.getBoundingBox().left;
+////            float top = d.getBoundingBox().top;
+////            float right = d.getBoundingBox().right;
+////            float bottom = d.getBoundingBox().bottom;
+//
+//            c.drawRect(d.getBoundingBox(), paint);
+//            Log.i(TAG, d.toString());
+//
+//        }
+//        api.saveBitmapImage(image, "testingDetection");
+//        return results;
+//    }
 }
