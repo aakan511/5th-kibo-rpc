@@ -23,73 +23,33 @@ public class YourService extends KiboRpcService {
         // The mission starts.
         api.startMission();
         Movement.api = api;
-        try {
-            new Vision(api, this.getApplicationContext());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        Vision v = new Vision(api);
         // Move to a point.
-        Point point = new Point(10.9d, -9.92284d, 5.195d);
+        Point point = new Point(10.9d, -9.5d, 5.195d); //-9.9
         Quaternion quaternion = new Quaternion(0f, 0f, -0.707f, 0.707f);
         moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
 
-        quaternion = new Quaternion(0f, 0f, -0.707f, 0.707f);
-        point = new Point(10.925, -8.6, 5.195);
-        moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
 
-        Bitmap img1 = api.getBitmapNavCam();
-        api.saveBitmapImage(img1, "target1_bitmap");
-        Vision.detect(img1);
+        Mat image = api.getMatNavCam();
+        api.saveMatImage(Vision.undistort(image), "front0.jpg");
+
+        image = api.getMatDockCam();
+        api.saveMatImage(Vision.undistort(image), "back0.jpg");
 
 
-        // Get a camera image.
-//        Mat image = api.getMatNavCam();
-//        api.saveMatImage(image, "front1");
-//        Mat target1 = Vision.cropPage(image);
-//        api.saveMatImage(target1, "target1_crop");
-//
-//        image = api.getMatDockCam();
-//        api.saveMatImage(image, "back1");
-//        Mat target4 = Vision.cropPage(image);
-//        api.saveMatImage(target4, "target4_crop");
-
-        point = new Point(10.925, -8.6, 5.195);
+        point = new Point(10.925, -8.6, 5); //5.195
         Quaternion quaternion1 = new Quaternion(0f, 0.707f, 0f, 0.707f);
-        //moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
+        moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
 
-        for(double x = 10.60; x <= 11.5; x+=.1) {
-            point = new Point(x, -8.6, 5.195);
-            moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
 
-//            for (float i = 0f; i < .4f; i+=.05f) {
-//                api.flashlightControlFront(i);
-//                api.flashlightControlBack(i);
-//                api.saveMatImage(api.getMatNavCam(), "" + "front1_" + x +"_" + intify(i) + ".png");
-//                api.saveMatImage(api.getMatDockCam(), "" + "back1_" + x +"_" + intify(i) + ".png");
-//
-//            }
-            api.saveMatImage(api.getMatNavCam(), "" + "front1_" + x + ".png");
-            api.saveMatImage(api.getMatDockCam(), "" + "back1_" + x + ".png");
-
-            moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
-
-//            for (float i = 0f; i < .4f; i+=.05f) {
-//                api.flashlightControlFront(i);
-//                api.flashlightControlBack(i);
-//                api.saveMatImage(api.getMatNavCam(), "" + "front2_" + x +"_" + intify(i) + ".png");
-//
-//            }
-            api.saveMatImage(api.getMatNavCam(), "" + "front2_" + x + ".png");
-        }
 
         // Get a camera image.
-//        image = api.getMatNavCam();
-//        api.saveMatImage(image, "front2");
-//        Mat target23 = Vision.cropPage(image);
-//        api.saveMatImage(target23, "target23_crop");
-//
-//        image = api.getMatDockCam();
-//        api.saveMatImage(image, "back2");
+        image = api.getMatNavCam();
+        api.saveMatImage(Vision.undistort(image), "front2.jpg");
+
+
+        image = api.getMatDockCam();
+        api.saveMatImage(Vision.undistort(image), "back2.jpg");
 
 
 

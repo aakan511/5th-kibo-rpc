@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.Log;
 
+import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -16,12 +17,11 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.QRCodeDetector;
-import org.tensorflow.lite.support.image.TensorImage;
-import org.tensorflow.lite.task.core.BaseOptions;
-import org.tensorflow.lite.task.vision.detector.Detection;
-import org.tensorflow.lite.task.vision.detector.ObjectDetector;
 
+
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,23 +32,33 @@ import static android.content.ContentValues.TAG;
 
 public final class Vision {
     public static KiboRpcApi api;
+    public static Mat camMat;
+    public static Mat distortionCoefficients;
 
-    public static ObjectDetector.ObjectDetectorOptions options;
 
-    public static ObjectDetector objectDetector;
-
-    public static String modelFile = "ogModel.tflite";
-
-    public Vision(KiboRpcApi api, Context context) throws IOException {
+    public Vision(KiboRpcApi api){
         this.api = api;
-        options =
-                ObjectDetector.ObjectDetectorOptions.builder()
-                        .setBaseOptions(BaseOptions.builder().useGpu().build())
-                        .setMaxResults(1)
-                        .build();
-        objectDetector =
-                ObjectDetector.createFromFileAndOptions(
-                       context , modelFile, options);
+        double[][] navCamIntrinsics = api.getNavCamIntrinsics(); //gets camera distortion
+        camMat = new Mat().zeros(3, 3, CvType.CV_64FC(1));//intrinsic camera matrix initializer
+        distortionCoefficients = new Mat().zeros(4, 1, CvType.CV_64FC(1)); //distortion coefficient initializer
+        for(int r=0; r<3; r++){ //fills intrinsic camera matrix with correct values
+            for(int c=0; c<3; c++) {
+                camMat.put(r, c, (navCamIntrinsics[0][3*r+c]));
+                Log.i(TAG, "camMat[" + r +", " + c + "] = " + camMat.get(r, c));
+                Log.i(TAG, "navCamIntrinsics[" + (3*r+c) + "] = " + navCamIntrinsics[0][3*r+c]);
+            }
+        }
+        for(int i=0; i<navCamIntrinsics[1].length-1; i++){ //fills distorition coefficient array with values
+            distortionCoefficients.put(i, 0, (navCamIntrinsics[1][i]));
+            Log.i(TAG, "distortionCoefficients[" + i + "] = " + distortionCoefficients.get(0,1));
+            Log.i(TAG, "navCamIntrinsics[" + i + "] = " + navCamIntrinsics[1][i]);
+        }
+    }
+
+    public Vision(KiboRpcApi api, Mat camMat, Mat distortionCoefficients){
+        this.api = api;
+        this.camMat = camMat;
+        this.distortionCoefficients = distortionCoefficients;
 
     }
 
@@ -79,36 +89,11 @@ public final class Vision {
 
         return img_contourCrop;
     }
-    public static Mat undistort(Mat src, Mat camMat, Mat distortionCoefficients){
+    public static Mat undistort(Mat src){
         Mat dst = new Mat();
-        //org.opencv.imgproc.Imgproc.undistort(src, dst, camMat, distortionCoefficients);
+        Calib3d.undistort(src, dst, camMat, distortionCoefficients);
+//        org.opencv.imgproc.Imgproc.undistort(src, dst, camMat, distortionCoefficients);
         return dst;
     }
 
-    public static List<Detection> detect(Bitmap image) {
-        if (api == null || options == null || objectDetector == null || modelFile == null) {
-            throw new IllegalArgumentException("Vision was not started properly");
-        }
-        TensorImage img = TensorImage.fromBitmap(image);
-
-        List<Detection> results = objectDetector.detect(img);
-
-        Canvas c = new Canvas(image);
-        Paint paint = new Paint();
-        paint.setColor(Color.RED);
-        paint.setStrokeWidth(5);
-
-        for (Detection d : results) {
-//            float left = d.getBoundingBox().left;
-//            float top = d.getBoundingBox().top;
-//            float right = d.getBoundingBox().right;
-//            float bottom = d.getBoundingBox().bottom;
-
-            c.drawRect(d.getBoundingBox(), paint);
-            Log.i(TAG, d.toString());
-
-        }
-        api.saveBitmapImage(image, "testingDetection");
-        return results;
-    }
 }
