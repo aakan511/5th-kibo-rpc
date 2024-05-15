@@ -23,7 +23,8 @@ public class YourService extends KiboRpcService {
         // The mission starts.
         api.startMission();
         Movement.api = api;
-        Vision v = new Vision(api);
+
+        Vision v = new Vision(api, getApplicationContext());
         // Move to a point.
         Point point = new Point(10.9d, -9.5d, 5.195d); //-9.9
         Quaternion quaternion = new Quaternion(0f, 0f, -0.707f, 0.707f);
@@ -31,13 +32,16 @@ public class YourService extends KiboRpcService {
 
 
         Mat image = api.getMatNavCam();
-        api.saveMatImage(Vision.undistort(image), "front0.jpg");
+        image = Vision.undistort(image);
+        Vision.findAruco(image);
+        api.saveMatImage(image, "front0.jpg");
+
 
         image = api.getMatDockCam();
         api.saveMatImage(Vision.undistort(image), "back0.jpg");
 
 
-        point = new Point(10.925, -8.6, 5); //5.195
+        point = new Point(10.925, -8.6, 4.9); //5.195
         Quaternion quaternion1 = new Quaternion(0f, 0.707f, 0f, 0.707f);
         moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
 
@@ -45,7 +49,9 @@ public class YourService extends KiboRpcService {
 
         // Get a camera image.
         image = api.getMatNavCam();
-        api.saveMatImage(Vision.undistort(image), "front2.jpg");
+        image = Vision.undistort(image);
+        Vision.findAruco(image);
+        api.saveMatImage(image, "front2.jpg");
 
 
         image = api.getMatDockCam();
