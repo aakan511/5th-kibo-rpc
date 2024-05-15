@@ -58,14 +58,6 @@ public class YourService extends KiboRpcService {
         api.saveMatImage(Vision.undistort(image), "back2.jpg");
 
 
-
-        /* *********************************************************************** */
-        /* Write your code to recognize type and number of items in the each area! */
-        /* *********************************************************************** */
-
-        // When you recognize items, let’s set the type and number.
-        api.setAreaInfo(1, "item_name", 1);
-
         /* **************************************************** */
         /* Let's move to the each area and recognize the items. */
         /* **************************************************** */

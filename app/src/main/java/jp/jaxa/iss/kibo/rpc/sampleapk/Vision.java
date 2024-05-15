@@ -22,8 +22,10 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.features2d.ORB;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.QRCodeDetector;
 
@@ -50,8 +52,9 @@ public final class Vision {
     public static Mat camMat;
     public static Mat distortionCoefficients;
     public static String[] categories = {"beaker", "top", "wrench", "hammer", "kapton_tape", "screwdriver", "pipette", "thermometer", "watch", "goggle"};
-    public static SIFT sift = SIFT.create();
-    public static BFMatcher matcher = BFMatcher.create(BFMatcher.BRUTEFORCE_L1, true);
+    public static int[] categoryIds = {R.drawable.beaker, R.drawable.top , R.drawable.wrench, R.drawable.hammer , R.drawable.kapton_tape , R.drawable.screwdriver , R.drawable.pipette , R.drawable.thermometer , R.drawable.watch , R.drawable.goggle};
+    public static ORB sift = ORB.create();
+    public static BFMatcher matcher;
     public static MatOfKeyPoint[] keyPoints;
     public static Mat[] descriptors;
     public static Dictionary dict = Aruco.getPredefinedDictionary(Aruco.DICT_5X5_250);
@@ -74,24 +77,30 @@ public final class Vision {
             Log.i(TAG, "navCamIntrinsics[" + i + "] = " + navCamIntrinsics[1][i]);
         }
 
+        matcher = BFMatcher.create(BFMatcher.BRUTEFORCE_HAMMING, true);
+        matcher.train();
         keyPoints = new MatOfKeyPoint[categories.length];
         descriptors = new Mat[categories.length];
-        AssetManager assetManager = context.getAssets();
-        //AssetManager manager = AssetManager.getSystem();
+
         for (int i = 0; i < categories.length; i++) {
             try {
-                InputStream curr = assetManager.open(categories[i] + ".png");
-                Bitmap bmp = BitmapFactory.decodeStream(curr);
+//                InputStream curr = assetManager.open(categories[i] + ".png");
+//                Bitmap bmp = BitmapFactory.decodeStream(curr);
+                Mat in = Utils.loadResource(context, categoryIds[i]);
+
 
                 Mat img = new Mat();
-                Utils.bitmapToMat(bmp, img);
+//                Utils.bitmapToMat(bmp, img);
+                Imgproc.cvtColor(in, img, Imgproc.COLOR_RGB2GRAY);
 
                 keyPoints[i] = new MatOfKeyPoint();
                 descriptors[i] = new Mat();
 
-                sift.detectAndCompute(img, null, keyPoints[i], descriptors[i]);
+                sift.detect(img, keyPoints[i]);
+                sift.compute(img, keyPoints[i], descriptors[i]);
+//                sift.detectAndCompute(img, null, keyPoints[i], descriptors[i]);
 
-                curr.close();
+//                curr.close();
             } catch (IOException e) {
                 Log.i("BUGBUGBUG", e.getMessage());
             }
@@ -99,44 +108,10 @@ public final class Vision {
 
     }
 
-    public Vision(KiboRpcApi api, Mat camMat, Mat distortionCoefficients){
-        this.api = api;
-        this.camMat = camMat;
-        this.distortionCoefficients = distortionCoefficients;
 
-    }
-
-    public static Mat cropPage(Mat image)
-    {
-        Rect rectCrop;// = new Rect(img.width()/4, img.height()/4, img.width()/2, img.height()/2);
-//        Mat image = new Mat(img, rectCrop);
-//        Core.flip(image, image, -1);
-//        api.saveMatImage(image, "QRCodes_Undistort_Flip.png");
-
-        Mat thresh = new Mat();
-        Imgproc.threshold(image, thresh, 230, 255, Imgproc.THRESH_BINARY);
-        api.saveMatImage(thresh, "simpleThresh.png");
-
-        List<MatOfPoint> contours = new ArrayList<>();
-        Mat heirarchy = new Mat();
-        Imgproc.findContours(thresh, contours, heirarchy,Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        if (contours.size() == 0) { //could save a few lines later
-            for (int threshold = 225; threshold > 100 && contours.size() == 0; threshold -= 5) {
-                Imgproc.threshold(image, thresh, threshold, 255, Imgproc.THRESH_BINARY);
-                Imgproc.findContours(thresh, contours, heirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-            }
-        }
-
-        rectCrop = Imgproc.boundingRect(contours.get(0));
-        Mat img_contourCrop = new Mat(image, rectCrop);
-
-        return img_contourCrop;
-    }
     public static Mat undistort(Mat src){
         Mat dst = new Mat();
         Calib3d.undistort(src, dst, camMat, distortionCoefficients);
-//        org.opencv.imgproc.Imgproc.undistort(src, dst, camMat, distortionCoefficients);
         return dst;
     }
 
@@ -151,7 +126,14 @@ public final class Vision {
 //        Mat descriptor = new Mat();
 //        sift.detectAndCompute(img, null, pts, descriptor);
 
+//        Mat descriptor = new Mat(descriptor1.size(), descriptor1.type());
+//        descriptor1.copyTo(descriptor1);
+
+
         MatOfDMatch matches = new MatOfDMatch();
+
+        //Mat qDescriptor = new Mat(descriptors[index].size(), descriptors[index].type());
+        //descriptors[index].copyTo(qDescriptor);
         matcher.match(descriptors[index], descriptor, matches);
 
         DMatch[] matches1 = matches.toArray();
@@ -180,7 +162,9 @@ public final class Vision {
     public static String classify(Mat img) {
         MatOfKeyPoint pts = new MatOfKeyPoint();
         Mat descriptor = new Mat();
-        sift.detectAndCompute(img, null, pts, descriptor);
+
+        sift.detect(img, pts);
+        sift.compute(img, pts, descriptor);
 
 
         double min = Double.MAX_VALUE;
@@ -220,9 +204,55 @@ public final class Vision {
         }
     }
 
-    public static Mat arucoCrop(Mat in, Mat corners) {
-        Log.i("arucoCrop", "width: " + corners.size().width + ", height: " + corners.height());
-        return in;
+    public static Mat arucoCrop(Mat in, Mat corner) {
+        Log.i("arucoCrop", "width: " + corner.size().width + ", height: " + corner.height());
+
+        double[] topLeft =  corner.get(0, 0);
+        double[] topRight = corner.get(0, 1);
+        double[] bottomLeft = corner.get(0, 3);
+        double[] bottomRight = corner.get(0, 2);
+
+        double[] deltaHorizontal = {topLeft[0] - topRight[0], topLeft[1] - topRight[1]};
+        double[] deltaVertical = {topLeft[0] - bottomLeft[0], topLeft[1] - bottomLeft[1]};
+        double distance = .05;
+        double scale = 1.08;
+
+        double[] dirHorizontal = {deltaHorizontal[0] / distance, deltaHorizontal[1] / distance};
+        double[] dirVertical = {deltaVertical[0] / distance, deltaVertical[1] / distance};
+
+        Point topLeftBound = new Point( scale * (dirHorizontal[0] * .2075 + dirVertical[0] * .0125) + topLeft[0],
+                scale * (dirHorizontal[1] * .2075 + dirVertical[1] * .0125) + topLeft[1]);
+        Point topRightBound = new Point(scale * (dirHorizontal[0] * .01 + dirVertical[0] * .0125),
+                scale * (dirHorizontal[1] * .01 + dirVertical[1] * .0125) + topLeft[1]);
+        Point bottomRightBound = new Point(scale * (-1 * dirVertical[0] * .0875 + dirHorizontal[0] * .01) + bottomLeft[0],
+                scale * (-1 * dirVertical[1] * .0875 + dirHorizontal[1] * .01) + bottomLeft[1]);
+        Point bottomLeftBound = new Point(scale * (-1 * dirVertical[0] * .15) + topLeftBound.x,
+                scale * (-1 * dirVertical[1] * .15) + topLeftBound.y);
+        List<MatOfPoint> points = new ArrayList<>();
+
+        Mat copy = new Mat(in.size(), in.type());
+        in.copyTo(copy);
+        Imgproc.line(copy, topLeftBound, topRightBound, new Scalar(255, 0, 0), 2);
+//        Imgproc.line(copy, topLeftBound, bottomLeftBound, new Scalar(255, 0, 0), 2);
+        Imgproc.line(copy, bottomRightBound, topRightBound, new Scalar(255, 0, 0), 2);
+//        Imgproc.line(copy, bottomRightBound, bottomLeftBound, new Scalar(255, 0, 0), 2);
+
+        api.saveMatImage(copy, "debug.png");
+
+        points.add(new MatOfPoint(topLeftBound, topRightBound, bottomRightBound, bottomLeftBound));
+
+        Mat mask = Mat.zeros(in.size(), in.type());
+        Imgproc.fillPoly(mask, points, new Scalar(255, 255, 255));
+        api.saveMatImage(mask, "mask.png");
+
+        Core.bitwise_not(in, in);
+        Mat cropped = new Mat();
+        Core.bitwise_and(in, mask, cropped);
+        Core.bitwise_not(cropped, cropped);
+        api.saveMatImage(cropped, "cropped.png");
+
+        return cropped;
+
     }
 
     public static int countObjects(Mat in) {
