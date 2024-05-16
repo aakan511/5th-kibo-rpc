@@ -257,7 +257,7 @@ public final class Vision {
         Imgproc.findContours(thresh, contours, heirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
         Imgproc.drawContours(in, contours, -1, new Scalar(0, 0, 255));
-
+        int i = 0;
         return contours.size();
     }
 }
