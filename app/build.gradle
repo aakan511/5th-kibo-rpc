@@ -55,15 +55,6 @@ dependencies {
     }
     testCompile 'junit:junit:4.12'
     implementation files('libs/opencv-4.9.0.aar')
-//    implementation 'com.quickbirdstudios:opencv-contrib:4.5.3.0'
 
-//    compile 'org.tensorflow:tensorflow-lite-task-vision:0.4.0'
-
-//    implementation 'org.tensorflow:tensorflow-lite:2.2.0'
-//    implementation 'org.tensorflow:tensorflow-lite-gpu:2.2.0'
-//    implementation 'org.tensorflow:tensorflow-lite-gpu-delegate-plugin'
-//    implementation 'org.tensorflow:tensorflow-lite-task-vision'
-
-   // implementation 'com.google.mlkit:object-detection-custom:16.3.3'
 
 }

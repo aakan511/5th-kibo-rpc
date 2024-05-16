@@ -87,7 +87,8 @@ public final class Vision {
             Log.i(TAG, "navCamIntrinsics[" + i + "] = " + navCamIntrinsics[1][i]);
         }
 
-        matcher = BFMatcher.create(BFMatcher.BRUTEFORCE_L1, true);
+//        matcher = new BFMatcher(BFMatcher.BRUTEFORCE_L1, true);
+        matcher = BFMatcher.create(BFMatcher.BRUTEFORCE, true);
 
         keyPoints = new MatOfKeyPoint[categories.length];
         descriptors = new Mat[categories.length];
