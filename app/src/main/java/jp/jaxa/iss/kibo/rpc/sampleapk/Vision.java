@@ -11,9 +11,9 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.Log;
 
+import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.aruco.Aruco;
-import org.opencv.aruco.Dictionary;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -25,8 +25,11 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.ORB;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.ArucoDetector;
+import org.opencv.objdetect.Dictionary;
 import org.opencv.objdetect.QRCodeDetector;
 
 import org.opencv.features2d.SIFT;
@@ -46,6 +49,8 @@ import jp.jaxa.iss.kibo.rpc.api.KiboRpcApi;
 
 import static android.content.ContentValues.TAG;
 import static org.opencv.core.Core.bitwise_not;
+import static org.opencv.objdetect.Objdetect.DICT_5X5_250;
+import static org.opencv.objdetect.Objdetect.getPredefinedDictionary;
 
 public final class Vision {
     public static KiboRpcApi api;
@@ -53,13 +58,18 @@ public final class Vision {
     public static Mat distortionCoefficients;
     public static String[] categories = {"beaker", "top", "wrench", "hammer", "kapton_tape", "screwdriver", "pipette", "thermometer", "watch", "goggle"};
     public static int[] categoryIds = {R.drawable.beaker, R.drawable.top , R.drawable.wrench, R.drawable.hammer , R.drawable.kapton_tape , R.drawable.screwdriver , R.drawable.pipette , R.drawable.thermometer , R.drawable.watch , R.drawable.goggle};
-    public static ORB sift = ORB.create();
-    public static BFMatcher matcher;
+    public static SIFT sift = SIFT.create(10);
+    public static DescriptorMatcher matcher;
     public static MatOfKeyPoint[] keyPoints;
     public static Mat[] descriptors;
-    public static Dictionary dict = Aruco.getPredefinedDictionary(Aruco.DICT_5X5_250);
+    public static Dictionary dict = getPredefinedDictionary(DICT_5X5_250);
 
     public Vision(KiboRpcApi api, Context context){
+        OpenCVLoader.initLocal();
+//        if (!OpenCVLoader.initDebug())
+//            Log.e("OpenCV", "Unable to load OpenCV!");
+//        else
+//            Log.d("OpenCV", "OpenCV loaded Successfully!");
         this.api = api;
         double[][] navCamIntrinsics = api.getNavCamIntrinsics(); //gets camera distortion
         camMat = new Mat().zeros(3, 3, CvType.CV_64FC(1));//intrinsic camera matrix initializer
@@ -77,8 +87,8 @@ public final class Vision {
             Log.i(TAG, "navCamIntrinsics[" + i + "] = " + navCamIntrinsics[1][i]);
         }
 
-        matcher = BFMatcher.create(BFMatcher.BRUTEFORCE_HAMMING, true);
-        matcher.train();
+        matcher = BFMatcher.create(BFMatcher.BRUTEFORCE_L1, true);
+
         keyPoints = new MatOfKeyPoint[categories.length];
         descriptors = new Mat[categories.length];
 
@@ -119,8 +129,9 @@ public final class Vision {
         if (index < 0 || index >= categories.length) {
             throw new IndexOutOfBoundsException("Index out of bounds... you know the deal");
         }
-        if (descriptors[index] == null){
-            throw new IllegalArgumentException("Uhoh descriptors not generating properly");
+        if (descriptors[index] == null || descriptors[index].empty()){
+            Log.i("SiftError", "Uhoh descriptors not generating properly");
+            return Double.MAX_VALUE;
         }
 //        MatOfKeyPoint pts = new MatOfKeyPoint();
 //        Mat descriptor = new Mat();
@@ -134,6 +145,15 @@ public final class Vision {
 
         //Mat qDescriptor = new Mat(descriptors[index].size(), descriptors[index].type());
         //descriptors[index].copyTo(qDescriptor);
+        if (descriptor == null || descriptor.empty()) {
+            Log.i("SiftError", "other descriptors not generating properly");
+            return Double.MAX_VALUE;
+        }
+
+        Log.i("descriptorsArray", "type : " + descriptors[index].type());
+        Log.i("descriptorsArray", "size : " + descriptors[index].size());
+        Log.i("descriptor", "type : " + descriptor.type());
+        Log.i("descriptor", "size : " + descriptor.size());
         matcher.match(descriptors[index], descriptor, matches);
 
         DMatch[] matches1 = matches.toArray();
@@ -183,7 +203,9 @@ public final class Vision {
         List<Mat> corners = new ArrayList<>();
         Mat ids = new Mat();
 
-        Aruco.detectMarkers(img, dict, corners, ids);
+        ArucoDetector arucoDetector = new ArucoDetector(dict);
+        arucoDetector.detectMarkers(img, corners, ids);
+//        Aruco.detectMarkers(img, dict, corners, ids);
 
         if (corners.size() > 0) {
             String[] result = new String[corners.size()];
@@ -232,7 +254,7 @@ public final class Vision {
         points.add(new MatOfPoint(topLeftBound, topRightBound, bottomRightBound, bottomLeftBound));
 
         Mat mask = Mat.zeros(in.size(), in.type());
-        Imgproc.fillPoly(mask, points, new Scalar(255, 255, 255));
+        Imgproc.fillPoly(mask, points, new Scalar(255));
         api.saveMatImage(mask, "mask.png");
 
         Core.bitwise_not(in, in);
@@ -256,8 +278,8 @@ public final class Vision {
         Mat heirarchy = new Mat();
         Imgproc.findContours(thresh, contours, heirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        Imgproc.drawContours(in, contours, -1, new Scalar(0, 0, 255));
-        int i = 0;
+        Imgproc.drawContours(in, contours, -1, new Scalar(255));
+
         return contours.size();
     }
 }
