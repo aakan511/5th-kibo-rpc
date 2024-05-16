@@ -222,23 +222,13 @@ public final class Vision {
 
         Point topLeftBound = new Point( scale * (dirHorizontal[0] * .2075 + dirVertical[0] * .0125) + topLeft[0],
                 scale * (dirHorizontal[1] * .2075 + dirVertical[1] * .0125) + topLeft[1]);
-        Point topRightBound = new Point(scale * (dirHorizontal[0] * .01 + dirVertical[0] * .0125),
+        Point topRightBound = new Point(scale * (dirHorizontal[0] * .01 + dirVertical[0] * .0125) + topLeft[0],
                 scale * (dirHorizontal[1] * .01 + dirVertical[1] * .0125) + topLeft[1]);
         Point bottomRightBound = new Point(scale * (-1 * dirVertical[0] * .0875 + dirHorizontal[0] * .01) + bottomLeft[0],
                 scale * (-1 * dirVertical[1] * .0875 + dirHorizontal[1] * .01) + bottomLeft[1]);
         Point bottomLeftBound = new Point(scale * (-1 * dirVertical[0] * .15) + topLeftBound.x,
                 scale * (-1 * dirVertical[1] * .15) + topLeftBound.y);
         List<MatOfPoint> points = new ArrayList<>();
-
-        Mat copy = new Mat(in.size(), in.type());
-        in.copyTo(copy);
-        Imgproc.line(copy, topLeftBound, topRightBound, new Scalar(255, 0, 0), 2);
-//        Imgproc.line(copy, topLeftBound, bottomLeftBound, new Scalar(255, 0, 0), 2);
-        Imgproc.line(copy, bottomRightBound, topRightBound, new Scalar(255, 0, 0), 2);
-//        Imgproc.line(copy, bottomRightBound, bottomLeftBound, new Scalar(255, 0, 0), 2);
-
-        api.saveMatImage(copy, "debug.png");
-
         points.add(new MatOfPoint(topLeftBound, topRightBound, bottomRightBound, bottomLeftBound));
 
         Mat mask = Mat.zeros(in.size(), in.type());
