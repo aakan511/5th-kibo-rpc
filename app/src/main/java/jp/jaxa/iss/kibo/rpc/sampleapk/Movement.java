@@ -13,6 +13,15 @@ import static jp.jaxa.iss.kibo.rpc.sampleapk.YourService.LOOP_MAX;
 
 public final class Movement {
     public static KiboRpcApi api;
+    public static Path[] scanningPaths = {new Path(new Quaternion(0f, 0f, -.707f, .707f), new Point(10.9d, -9.5d, 5.19d)),
+            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.925, -8.875, 4.9)),
+            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.7, -7.925, 4.8)),
+            new Path(new Quaternion(0f, 1f, 0f, 0f), new Point(10.7, -6.8525, 4.8)),
+            new Path(new Quaternion(0f, 0f, 0.707f, 0.707f), new Point(11.143, -6.7607, 4.9654))};
+    public static Path[] returnPaths = {new Path(new Quaternion(0f, 0f, -.707f, .707f), new Point(11.143, -6.7607, 4.9654), new Point(10.7, -7.925, 4.8), new Point(10.925, -8.875, 4.9), new Point(10.9d, -9.5d, 5.19d)),
+            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(11.143, -6.7607, 4.9654), new Point(10.7, -7.925, 4.8), new Point(10.925, -8.875, 4.9)),
+            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(11.143, -6.7607, 4.9654), new Point(10.7, -7.925, 4.8)),
+            new Path(new Quaternion(0f, 0f, 0.707f, 0.707f), new Point(11.143, -6.7607, 4.9654))};
 
     private Movement() {}
 
@@ -169,6 +178,19 @@ public final class Movement {
             Thread.currentThread().interrupt();
         }
     }
+
+    public static void goToTarget(int start, int end) {
+        end--;
+        if (start != 5) {
+            for (int i = 0; i < scanningPaths[end].length; i++) {
+                moveAstrobee(scanningPaths[end].points[i], scanningPaths[end].orientation, 'A', false, "goingToTarget");
+            }
+        } else {
+            for (int i = 0; i < returnPaths[end].length; i++) {
+                moveAstrobee(returnPaths[end].points[i], returnPaths[end].orientation, 'A', false, "goingToTarget");
+            }
+        }
+    }
 }
 
 
@@ -194,4 +216,17 @@ class KOZ{
     protected Point [] kOZ2_P2 = {kOZ2_P2_min_data, kOZ2_P2_max_data};
     protected Point [] kOZ3_P1 = {kOZ3_P1_min_data, kOZ3_P1_max_data};
     protected Point [] kOZ3_P2 = {kOZ3_P2_min_data, kOZ3_P2_max_data};
+}
+
+class Path {
+    public Point[] points;
+    public Quaternion orientation;
+    public int length;
+
+    public Path(Quaternion q, Point... p) {
+        orientation = q;
+        points = p;
+        length = p.length;
+    }
+    public Path() {} //placeholder will delete later
 }

@@ -253,7 +253,7 @@ public final class Vision {
             double temp = get_min(descriptors, targetDescriptors[curr - 1]);
             if (temp < minDistance) {
                 minDistance = temp;
-                minTarget = currTarget;
+                minTarget = curr;
             }
         }
         return minTarget;
@@ -273,8 +273,8 @@ public final class Vision {
 
                 Mat clean = arucoCrop(img, corners.get(i));
                 Mat descriptor = getDescriptors(clean);
-                String category = (ids.get(i, 0)[0] - 100 == currTarget && currTarget == 5) ? "blank" : classify(descriptor);
-                int numObjects = (ids.get(i, 0)[0] - 100 == currTarget && currTarget == 5) ? 1 : countObjects(clean);
+                String category = (ids.get(i, 0)[0] == 100) ? "blank" : classify(descriptor);
+                int numObjects = (ids.get(i, 0)[0] == 100) ? 1 : countObjects(clean);
 
                 if (allowReport && (int) ids.get(i, 0)[0] - 100 == currTarget) {
                     targetCategories[currTarget - 1] = category;
@@ -285,8 +285,9 @@ public final class Vision {
                     currTarget++;
                 }
 
-                if (ids.get(i, 0)[0] - 100 == currTarget && currTarget == 5) {
+                if (ids.get(i, 0)[0] == 100) {
                     int target = findTarget(descriptor);
+                    Movement.goToTarget(5, target); //really ugly... should be refactored eventually
                     Log.i("FinalLocation", "Final target : " + target);
                 }
 
