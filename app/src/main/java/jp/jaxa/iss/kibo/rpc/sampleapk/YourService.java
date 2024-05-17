@@ -64,7 +64,7 @@ public class YourService extends KiboRpcService {
 
 
         point = new Point(10.7, -6.8525, 4.8);
-        quaternion1 = new Quaternion(.707f, 0f, 0f, .707f);
+        quaternion1 = new Quaternion(-.707f, 0f, 0f, .707f);
         moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
 
         // Get a camera image.
