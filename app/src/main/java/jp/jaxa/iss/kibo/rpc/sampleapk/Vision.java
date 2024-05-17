@@ -1,14 +1,6 @@
 package jp.jaxa.iss.kibo.rpc.sampleapk;
 
-
 import android.content.Context;
-import android.content.ContextWrapper;
-import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
@@ -58,18 +50,17 @@ public final class Vision {
     public static Mat distortionCoefficients;
     public static String[] categories = {"beaker", "top", "wrench", "hammer", "kapton_tape", "screwdriver", "pipette", "thermometer", "watch", "goggle"};
     public static int[] categoryIds = {R.drawable.beaker, R.drawable.top , R.drawable.wrench, R.drawable.hammer , R.drawable.kapton_tape , R.drawable.screwdriver , R.drawable.pipette , R.drawable.thermometer , R.drawable.watch , R.drawable.goggle};
-    public static SIFT sift = SIFT.create(10);
+    public static SIFT sift = SIFT.create();
     public static DescriptorMatcher matcher;
     public static MatOfKeyPoint[] keyPoints;
     public static Mat[] descriptors;
     public static Dictionary dict = getPredefinedDictionary(DICT_5X5_250);
+    public static ArucoDetector arucoDetector = new ArucoDetector(dict);
+    public static String[] targetCategories = new String[4];
+    public static int currTarget = 1;
 
     public Vision(KiboRpcApi api, Context context){
         OpenCVLoader.initLocal();
-//        if (!OpenCVLoader.initDebug())
-//            Log.e("OpenCV", "Unable to load OpenCV!");
-//        else
-//            Log.d("OpenCV", "OpenCV loaded Successfully!");
         this.api = api;
         double[][] navCamIntrinsics = api.getNavCamIntrinsics(); //gets camera distortion
         camMat = new Mat().zeros(3, 3, CvType.CV_64FC(1));//intrinsic camera matrix initializer
@@ -87,7 +78,6 @@ public final class Vision {
             Log.i(TAG, "navCamIntrinsics[" + i + "] = " + navCamIntrinsics[1][i]);
         }
 
-//        matcher = new BFMatcher(BFMatcher.BRUTEFORCE_L1, true);
         matcher = BFMatcher.create(BFMatcher.BRUTEFORCE, true);
 
         keyPoints = new MatOfKeyPoint[categories.length];
@@ -95,13 +85,9 @@ public final class Vision {
 
         for (int i = 0; i < categories.length; i++) {
             try {
-//                InputStream curr = assetManager.open(categories[i] + ".png");
-//                Bitmap bmp = BitmapFactory.decodeStream(curr);
                 Mat in = Utils.loadResource(context, categoryIds[i]);
 
-
                 Mat img = new Mat();
-//                Utils.bitmapToMat(bmp, img);
                 Imgproc.cvtColor(in, img, Imgproc.COLOR_RGB2GRAY);
 
                 keyPoints[i] = new MatOfKeyPoint();
@@ -109,9 +95,6 @@ public final class Vision {
 
                 sift.detect(img, keyPoints[i]);
                 sift.compute(img, keyPoints[i], descriptors[i]);
-//                sift.detectAndCompute(img, null, keyPoints[i], descriptors[i]);
-
-//                curr.close();
             } catch (IOException e) {
                 Log.i("BUGBUGBUG", e.getMessage());
             }
@@ -134,18 +117,8 @@ public final class Vision {
             Log.i("SiftError", "Uhoh descriptors not generating properly");
             return Double.MAX_VALUE;
         }
-//        MatOfKeyPoint pts = new MatOfKeyPoint();
-//        Mat descriptor = new Mat();
-//        sift.detectAndCompute(img, null, pts, descriptor);
-
-//        Mat descriptor = new Mat(descriptor1.size(), descriptor1.type());
-//        descriptor1.copyTo(descriptor1);
-
 
         MatOfDMatch matches = new MatOfDMatch();
-
-        //Mat qDescriptor = new Mat(descriptors[index].size(), descriptors[index].type());
-        //descriptors[index].copyTo(qDescriptor);
         if (descriptor == null || descriptor.empty()) {
             Log.i("SiftError", "other descriptors not generating properly");
             return Double.MAX_VALUE;
@@ -204,21 +177,26 @@ public final class Vision {
         List<Mat> corners = new ArrayList<>();
         Mat ids = new Mat();
 
-        ArucoDetector arucoDetector = new ArucoDetector(dict);
         arucoDetector.detectMarkers(img, corners, ids);
-//        Aruco.detectMarkers(img, dict, corners, ids);
 
         if (corners.size() > 0) {
             String[] result = new String[corners.size()];
-
+            boolean allowReport = true;
             for (int i = 0; i < corners.size(); i++) {
 
                 Mat clean = arucoCrop(img, corners.get(i));
                 String category = classify(clean);
                 int numObjects = countObjects(clean);
 
+                if (allowReport && (int) ids.get(i, 0)[0] - 100 == currTarget) {
+                    targetCategories[currTarget - 1] = category;
+                    api.setAreaInfo((int) ids.get(i, 0)[0] - 100, category, numObjects);
+                    allowReport = false;
+                    currTarget++;
+                }
+
                 Log.i("findAruco", numObjects + ", " + category + ", " + (ids.get(i, 0)[0] - 100));
-                api.setAreaInfo((int) ids.get(i, 0)[0] - 100, category, numObjects);
+                api.saveMatImage(clean, "target_" + ((int) (ids.get(i, 0)[0] - 100)) + "_cropped.png");
                 result[i] = category;
             }
             return result;
@@ -233,12 +211,12 @@ public final class Vision {
         double[] topLeft =  corner.get(0, 0);
         double[] topRight = corner.get(0, 1);
         double[] bottomLeft = corner.get(0, 3);
-        double[] bottomRight = corner.get(0, 2);
+        //double[] bottomRight = corner.get(0, 2);
 
         double[] deltaHorizontal = {topLeft[0] - topRight[0], topLeft[1] - topRight[1]};
         double[] deltaVertical = {topLeft[0] - bottomLeft[0], topLeft[1] - bottomLeft[1]};
         double distance = .05;
-        double scale = 1.08;
+        double scale = 1.03;
 
         double[] dirHorizontal = {deltaHorizontal[0] / distance, deltaHorizontal[1] / distance};
         double[] dirVertical = {deltaVertical[0] / distance, deltaVertical[1] / distance};
@@ -262,15 +240,13 @@ public final class Vision {
         Mat cropped = new Mat();
         Core.bitwise_and(in, mask, cropped);
         Core.bitwise_not(cropped, cropped);
-        api.saveMatImage(cropped, "cropped.png");
-
         return cropped;
 
     }
 
     public static int countObjects(Mat in) {
         Mat thresh = new Mat();
-        org.opencv.imgproc.Imgproc.threshold(in, thresh, 200, 255, Imgproc.THRESH_BINARY);
+        org.opencv.imgproc.Imgproc.threshold(in, thresh, 210, 255, Imgproc.THRESH_BINARY);
         bitwise_not(thresh, thresh);
 
         api.saveMatImage(thresh, "invertedThresh.png");
@@ -280,6 +256,7 @@ public final class Vision {
         Imgproc.findContours(thresh, contours, heirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
         Imgproc.drawContours(in, contours, -1, new Scalar(255));
+        api.saveMatImage(in, "countours" + contours.size() + ".png");
 
         return contours.size();
     }
