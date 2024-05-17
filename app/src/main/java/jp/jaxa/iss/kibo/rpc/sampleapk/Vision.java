@@ -41,6 +41,7 @@ import jp.jaxa.iss.kibo.rpc.api.KiboRpcApi;
 
 import static android.content.ContentValues.TAG;
 import static org.opencv.core.Core.bitwise_not;
+import static org.opencv.core.Core.min;
 import static org.opencv.objdetect.Objdetect.DICT_5X5_250;
 import static org.opencv.objdetect.Objdetect.getPredefinedDictionary;
 
@@ -56,6 +57,7 @@ public final class Vision {
     public static DescriptorMatcher matcher;
     public static MatOfKeyPoint[] keyPoints;
     public static Mat[] descriptors;
+    public static Mat[] targetDescriptors = new Mat[4];
     public static Dictionary dict = getPredefinedDictionary(DICT_5X5_250);
     public static ArucoDetector arucoDetector = new ArucoDetector(dict);
     public static String[] targetCategories = new String[4];
@@ -139,26 +141,9 @@ public final class Vision {
         return dst;
     }
 
-    public static double get_min(Mat descriptor, int index) {
-        if (index < 0 || index >= categories.length) {
-            throw new IndexOutOfBoundsException("Index out of bounds... you know the deal");
-        }
-        if (descriptors[index] == null || descriptors[index].empty()){
-            Log.i("SiftError", "Uhoh descriptors not generating properly");
-            return Double.MAX_VALUE;
-        }
-
+    public static double get_min(Mat descriptor, Mat oDescriptor) {
         MatOfDMatch matches = new MatOfDMatch();
-        if (descriptor == null || descriptor.empty()) {
-            Log.i("SiftError", "other descriptors not generating properly");
-            return Double.MAX_VALUE;
-        }
-
-        Log.i("descriptorsArray", "type : " + descriptors[index].type());
-        Log.i("descriptorsArray", "size : " + descriptors[index].size());
-        Log.i("descriptor", "type : " + descriptor.type());
-        Log.i("descriptor", "size : " + descriptor.size());
-        matcher.match(descriptors[index], descriptor, matches);
+        matcher.match(oDescriptor, descriptor, matches);
 
         DMatch[] matches1 = matches.toArray();
         if (matches1.length <= 1) {
@@ -183,12 +168,58 @@ public final class Vision {
         return (min[0] + min[1]) / 2;
     }
 
-    public static String classify(Mat img) {
-        MatOfKeyPoint pts = new MatOfKeyPoint();
-        Mat descriptor = new Mat();
+    public static double get_min(Mat descriptor, int index) {
+        if (index < 0 || index >= categories.length) {
+            throw new IndexOutOfBoundsException("Index out of bounds... you know the deal");
+        }
+        if (descriptors[index] == null || descriptors[index].empty()){
+            Log.i("SiftError", "Uhoh descriptors not generating properly");
+            return Double.MAX_VALUE;
+        }
 
-        sift.detect(img, pts);
-        sift.compute(img, pts, descriptor);
+        MatOfDMatch matches = new MatOfDMatch();
+        if (descriptor == null || descriptor.empty()) {
+            Log.i("SiftError", "other descriptors not generating properly");
+            return Double.MAX_VALUE;
+        }
+
+        Log.i("descriptorsArray", "type : " + descriptors[index].type());
+        Log.i("descriptorsArray", "size : " + descriptors[index].size());
+        Log.i("descriptor", "type : " + descriptor.type());
+        Log.i("descriptor", "size : " + descriptor.size());
+
+        return get_min(descriptor, descriptors[index]);
+//        matcher.match(descriptors[index], descriptor, matches);
+//
+//        DMatch[] matches1 = matches.toArray();
+//        if (matches1.length <= 1) {
+//            return Double.MAX_VALUE;
+//        }
+//        double[] min = {matches1[0].distance, matches1[1].distance};
+//        if (min[0] > min[1]) {
+//            double temp = min[0];
+//            min[0] = min[1];
+//            min[1] = temp;
+//        }
+//
+//        for (int i = 2; i < matches1.length; i++) {
+//            if (matches1[i].distance < min[0]) {
+//                min[1] = min[0];
+//                min[0] = matches1[i].distance;
+//            } else if(matches1[i].distance < min[1]) {
+//                min[1] = matches1[i].distance;
+//            }
+//        }
+//
+//        return (min[0] + min[1]) / 2;
+    }
+
+    public static String classify(Mat descriptor) {
+//        MatOfKeyPoint pts = new MatOfKeyPoint();
+//        Mat descriptor = new Mat();
+//
+//        sift.detect(img, pts);
+//        sift.compute(img, pts, descriptor);
 
 
         double min = Double.MAX_VALUE;
@@ -203,6 +234,32 @@ public final class Vision {
         return minCategory;
     }
 
+
+    public static Mat getDescriptors(Mat img) {
+        MatOfKeyPoint pts = new MatOfKeyPoint();
+        Mat descriptor = new Mat();
+
+        sift.detect(img, pts);
+        sift.compute(img, pts, descriptor);
+
+        return descriptor;
+    }
+
+    public static int findTarget(Mat descriptors) {
+        int minTarget = 1;
+        double minDistance = get_min(descriptors, targetDescriptors[minTarget - 1]);
+
+        for (int curr = 2; curr <= 4; curr++) {
+            double temp = get_min(descriptors, targetDescriptors[curr - 1]);
+            if (temp < minDistance) {
+                minDistance = temp;
+                minTarget = currTarget;
+            }
+        }
+        return minTarget;
+    }
+
+
     public static String[] findAruco(Mat img) {
         List<Mat> corners = new ArrayList<>();
         Mat ids = new Mat();
@@ -215,14 +272,22 @@ public final class Vision {
             for (int i = 0; i < corners.size(); i++) {
 
                 Mat clean = arucoCrop(img, corners.get(i));
-                String category = classify(clean);
-                int numObjects = countObjects(clean);
+                Mat descriptor = getDescriptors(clean);
+                String category = (ids.get(i, 0)[0] - 100 == currTarget && currTarget == 5) ? "blank" : classify(descriptor);
+                int numObjects = (ids.get(i, 0)[0] - 100 == currTarget && currTarget == 5) ? 1 : countObjects(clean);
 
                 if (allowReport && (int) ids.get(i, 0)[0] - 100 == currTarget) {
                     targetCategories[currTarget - 1] = category;
+                    targetDescriptors[currTarget - 1] = descriptor;
+
                     api.setAreaInfo((int) ids.get(i, 0)[0] - 100, category, numObjects);
                     allowReport = false;
                     currTarget++;
+                }
+
+                if (ids.get(i, 0)[0] - 100 == currTarget && currTarget == 5) {
+                    int target = findTarget(descriptor);
+                    Log.i("FinalLocation", "Final target : " + target);
                 }
 
                 Log.i("findAruco", numObjects + ", " + category + ", " + (ids.get(i, 0)[0] - 100));

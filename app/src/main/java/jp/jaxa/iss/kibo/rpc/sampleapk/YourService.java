@@ -23,52 +23,47 @@ public class YourService extends KiboRpcService {
         // The mission starts.
         api.startMission();
         Movement.api = api;
-
         Vision v = new Vision(api, getApplicationContext());
-        // Move to a point.
+
+        // Target 1
         Point point = new Point(10.9d, -9.5d, 5.19d); //5.0
         Quaternion quaternion = new Quaternion(0f, 0f, -0.707f, 0.707f);
         moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
 
-        api.flashlightControlFront(.05f);
+        api.flashlightControlFront(.01f);
         Mat image = api.getMatNavCam();
         image = Vision.undistort(image);
         Vision.findAruco(image);
         api.saveMatImage(image, "front0.jpg");
 
-//        image = api.getMatDockCam();
-//        api.saveMatImage(Vision.undistort(image), "back0.jpg");
-
-
+        // Target 2
         point = new Point(10.925, -8.875, 4.9);//new Point(10.925, -8.35, 4.9);
         Quaternion quaternion1 = new Quaternion(0f, 0.707f, 0f, 0.707f);
         moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
 
-        // Get a camera image.
-        api.flashlightControlFront(.05f);
+        api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
         image = Vision.undistort(image);
         Vision.findAruco(image);
         api.saveMatImage(image, "front1.jpg");
 
+
+        // Target 3
         point = new Point(10.7, -7.925, 4.8); //10.8, 4.9 = x, z
         moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
 
-        // Get a camera image.
-        api.flashlightControlFront(.05f);
+        api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
         image = Vision.undistort(image);
         Vision.findAruco(image);
         api.saveMatImage(image, "front2.jpg");
 
-
-
+        // Target 4
         point = new Point(10.7, -6.8525, 4.8);
-        quaternion1 = new Quaternion(-.707f, 0f, 0f, .707f);
+        quaternion1 = new Quaternion(-1f, 0f, 0f, 0f);
         moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
 
-        // Get a camera image.
-        api.flashlightControlFront(.05f);
+        api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
         image = Vision.undistort(image);
         Vision.findAruco(image);
@@ -78,13 +73,13 @@ public class YourService extends KiboRpcService {
         Vision.findAruco(image);
         api.saveMatImage(Vision.undistort(image), "back3.jpg");
 
-
-        point = new Point(11.145, -6.825, 4.95);
+        // Astronaut
+        point = new Point(11.143, -6.7607, 4.9654);
         quaternion1 = new Quaternion(0f, 0f, 0.707f, 0.707f);
         moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
 
         // Get a camera image.
-        api.flashlightControlFront(.05f);
+        api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
         image = Vision.undistort(image);
 //        Vision.findAruco(image);
@@ -92,16 +87,23 @@ public class YourService extends KiboRpcService {
         image = api.getMatDockCam();
         image = Vision.undistort(image, false);
 //        Vision.findAruco(image);
-        api.saveMatImage(Vision.undistort(image), "back4.jpg");
-//        image = api.getMatDockCam();
-//        api.saveMatImage(Vision.undistort(image), "back2.jpg");
+        api.saveMatImage(image, "back4.jpg");
 
-
-//        api.setAreaInfo(4, "nothing", 1);
 
         // When you move to the front of the astronaut, report the rounding completion.
         api.reportRoundingCompletion();
 
+        Movement.wait(30);
+
+        api.flashlightControlFront(.01f);
+        image = api.getMatNavCam();
+        image = Vision.undistort(image);
+//        Vision.findAruco(image);
+        api.saveMatImage(image, "front5.jpg");
+        image = api.getMatDockCam();
+        image = Vision.undistort(image, false);
+//        Vision.findAruco(image);
+        api.saveMatImage(image, "back5.jpg");
         /* ********************************************************** */
         /* Write your code to recognize which item the astronaut has. */
         /* ********************************************************** */
