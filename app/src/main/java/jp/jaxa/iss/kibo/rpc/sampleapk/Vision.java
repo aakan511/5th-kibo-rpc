@@ -48,6 +48,8 @@ public final class Vision {
     public static KiboRpcApi api;
     public static Mat camMat;
     public static Mat distortionCoefficients;
+    public static Mat rearCamMat;
+    public static Mat rearDistortionCoefficients;
     public static String[] categories = {"beaker", "top", "wrench", "hammer", "kapton_tape", "screwdriver", "pipette", "thermometer", "watch", "goggle"};
     public static int[] categoryIds = {R.drawable.beaker, R.drawable.top , R.drawable.wrench, R.drawable.hammer , R.drawable.kapton_tape , R.drawable.screwdriver , R.drawable.pipette , R.drawable.thermometer , R.drawable.watch , R.drawable.goggle};
     public static SIFT sift = SIFT.create();
@@ -62,6 +64,23 @@ public final class Vision {
     public Vision(KiboRpcApi api, Context context){
         OpenCVLoader.initLocal();
         this.api = api;
+
+        double[][] rearCamIntrinsics = api.getDockCamIntrinsics(); //gets camera distortion
+        rearCamMat = new Mat().zeros(3, 3, CvType.CV_64FC(1));//intrinsic camera matrix initializer
+        rearDistortionCoefficients = new Mat().zeros(4, 1, CvType.CV_64FC(1)); //distortion coefficient initializer
+        for(int r=0; r<3; r++){ //fills intrinsic camera matrix with correct values
+            for(int c=0; c<3; c++) {
+                rearCamMat.put(r, c, (rearCamIntrinsics[0][3*r+c]));
+//                Log.i(TAG, "camMat[" + r +", " + c + "] = " + rearCamMat.get(r, c));
+//                Log.i(TAG, "navCamIntrinsics[" + (3*r+c) + "] = " + rearCamIntrinsics[0][3*r+c]);
+            }
+        }
+        for(int i=0; i<rearCamIntrinsics[1].length-1; i++){ //fills distorition coefficient array with values
+            rearDistortionCoefficients.put(i, 0, (rearCamIntrinsics[1][i]));
+//            Log.i(TAG, "distortionCoefficients[" + i + "] = " + rearDistortionCoefficients.get(0,1));
+//            Log.i(TAG, "navCamIntrinsics[" + i + "] = " + navCamIntrinsics[1][i]);
+        }
+
         double[][] navCamIntrinsics = api.getNavCamIntrinsics(); //gets camera distortion
         camMat = new Mat().zeros(3, 3, CvType.CV_64FC(1));//intrinsic camera matrix initializer
         distortionCoefficients = new Mat().zeros(4, 1, CvType.CV_64FC(1)); //distortion coefficient initializer
@@ -77,6 +96,7 @@ public final class Vision {
             Log.i(TAG, "distortionCoefficients[" + i + "] = " + distortionCoefficients.get(0,1));
             Log.i(TAG, "navCamIntrinsics[" + i + "] = " + navCamIntrinsics[1][i]);
         }
+
 
         matcher = BFMatcher.create(BFMatcher.BRUTEFORCE, true);
 
@@ -106,6 +126,16 @@ public final class Vision {
     public static Mat undistort(Mat src){
         Mat dst = new Mat();
         Calib3d.undistort(src, dst, camMat, distortionCoefficients);
+        return dst;
+    }
+
+    public static Mat undistort(Mat src, boolean navCam){
+        Mat dst = new Mat();
+        if (navCam) {
+            Calib3d.undistort(src, dst, camMat, distortionCoefficients);
+        } else {
+            Calib3d.undistort(src, dst, rearCamMat, rearDistortionCoefficients);
+        }
         return dst;
     }
 
@@ -216,7 +246,7 @@ public final class Vision {
         double[] deltaHorizontal = {topLeft[0] - topRight[0], topLeft[1] - topRight[1]};
         double[] deltaVertical = {topLeft[0] - bottomLeft[0], topLeft[1] - bottomLeft[1]};
         double distance = .05;
-        double scale = 1.03;
+        double scale = 1.00;
 
         double[] dirHorizontal = {deltaHorizontal[0] / distance, deltaHorizontal[1] / distance};
         double[] dirVertical = {deltaVertical[0] / distance, deltaVertical[1] / distance};

@@ -74,9 +74,25 @@ public class YourService extends KiboRpcService {
         Vision.findAruco(image);
         api.saveMatImage(image, "front3.jpg");
         image = api.getMatDockCam();
+        image = Vision.undistort(image, false);
+        Vision.findAruco(image);
         api.saveMatImage(Vision.undistort(image), "back3.jpg");
 
 
+        point = new Point(11.145, -6.825, 4.95);
+        quaternion1 = new Quaternion(0f, 0f, 0.707f, 0.707f);
+        moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
+
+        // Get a camera image.
+        api.flashlightControlFront(.05f);
+        image = api.getMatNavCam();
+        image = Vision.undistort(image);
+//        Vision.findAruco(image);
+        api.saveMatImage(image, "front4.jpg");
+        image = api.getMatDockCam();
+        image = Vision.undistort(image, false);
+//        Vision.findAruco(image);
+        api.saveMatImage(Vision.undistort(image), "back4.jpg");
 //        image = api.getMatDockCam();
 //        api.saveMatImage(Vision.undistort(image), "back2.jpg");
 
