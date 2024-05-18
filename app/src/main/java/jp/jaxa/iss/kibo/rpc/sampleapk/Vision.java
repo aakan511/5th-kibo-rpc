@@ -183,44 +183,10 @@ public final class Vision {
             return Double.MAX_VALUE;
         }
 
-        Log.i("descriptorsArray", "type : " + descriptors[index].type());
-        Log.i("descriptorsArray", "size : " + descriptors[index].size());
-        Log.i("descriptor", "type : " + descriptor.type());
-        Log.i("descriptor", "size : " + descriptor.size());
-
         return get_min(descriptor, descriptors[index]);
-//        matcher.match(descriptors[index], descriptor, matches);
-//
-//        DMatch[] matches1 = matches.toArray();
-//        if (matches1.length <= 1) {
-//            return Double.MAX_VALUE;
-//        }
-//        double[] min = {matches1[0].distance, matches1[1].distance};
-//        if (min[0] > min[1]) {
-//            double temp = min[0];
-//            min[0] = min[1];
-//            min[1] = temp;
-//        }
-//
-//        for (int i = 2; i < matches1.length; i++) {
-//            if (matches1[i].distance < min[0]) {
-//                min[1] = min[0];
-//                min[0] = matches1[i].distance;
-//            } else if(matches1[i].distance < min[1]) {
-//                min[1] = matches1[i].distance;
-//            }
-//        }
-//
-//        return (min[0] + min[1]) / 2;
     }
 
     public static String classify(Mat descriptor) {
-//        MatOfKeyPoint pts = new MatOfKeyPoint();
-//        Mat descriptor = new Mat();
-//
-//        sift.detect(img, pts);
-//        sift.compute(img, pts, descriptor);
-
 
         double min = Double.MAX_VALUE;
         String minCategory = "blank";
@@ -230,6 +196,7 @@ public final class Vision {
                 min = temp;
                 minCategory = categories[i];
             }
+            Log.i("classify", categories[i] + " : " + temp);
         }
         return minCategory;
     }
@@ -332,9 +299,10 @@ public final class Vision {
         Imgproc.fillPoly(mask, points, new Scalar(255));
         api.saveMatImage(mask, "mask.png");
 
-        Core.bitwise_not(in, in);
+        Mat invert = new Mat();
+        Core.bitwise_not(in, invert);
         Mat cropped = new Mat();
-        Core.bitwise_and(in, mask, cropped);
+        Core.bitwise_and(invert, mask, cropped);
         Core.bitwise_not(cropped, cropped);
         return cropped;
 
@@ -342,7 +310,8 @@ public final class Vision {
 
     public static int countObjects(Mat in) {
         Mat thresh = new Mat();
-        org.opencv.imgproc.Imgproc.threshold(in, thresh, 210, 255, Imgproc.THRESH_BINARY);
+        org.opencv.imgproc.Imgproc.threshold(in, thresh, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
+        //try gaussian blur method for improved accuracy
         bitwise_not(thresh, thresh);
 
         api.saveMatImage(thresh, "invertedThresh.png");
