@@ -13,6 +13,8 @@ import static jp.jaxa.iss.kibo.rpc.sampleapk.YourService.LOOP_MAX;
 
 public final class Movement {
     public static KiboRpcApi api;
+
+    //Path for going to target so scanningPaths[2]
     public static Path[] scanningPaths = {new Path(new Quaternion(0f, 0f, -.707f, .707f), new Point(10.9d, -9.5d, 5.19d)),
             new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.925, -8.875, 4.9)),
             new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.7, -7.925, 4.8)),
