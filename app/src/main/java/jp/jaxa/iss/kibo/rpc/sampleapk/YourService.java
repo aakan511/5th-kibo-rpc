@@ -21,15 +21,12 @@ public class YourService extends KiboRpcService {
     public static final int LOOP_MAX = 4;
     @Override
     protected void runPlan1(){
-        // The mission starts.
+        // Start Mission
         api.startMission();
         Movement.api = api;
         Vision v = new Vision(api, getApplicationContext());
 
         // Target 1
-//        Point point = new Point(10.9d, -9.5d, 5.19d); //5.0
-//        Quaternion quaternion = new Quaternion(0f, 0f, -0.707f, 0.707f);
-//        moveAstrobee(point, quaternion, 'A', true, "AaronDebug");
         goToTarget(0, 1);
 
         api.flashlightControlFront(.01f);
@@ -39,9 +36,6 @@ public class YourService extends KiboRpcService {
         api.saveMatImage(image, "front0.jpg");
 
         // Target 2
-//        point = new Point(10.925, -8.875, 4.9);//new Point(10.925, -8.35, 4.9);
-//        Quaternion quaternion1 = new Quaternion(0f, 0.707f, 0f, 0.707f);
-//        moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
         goToTarget(1, 2);
 
         api.flashlightControlFront(.01f);
@@ -52,8 +46,6 @@ public class YourService extends KiboRpcService {
 
 
         // Target 3
-//        point = new Point(10.7, -7.925, 4.8); //10.8, 4.9 = x, z
-//        moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
         goToTarget(2, 3);
 
         api.flashlightControlFront(.01f);
@@ -63,9 +55,6 @@ public class YourService extends KiboRpcService {
         api.saveMatImage(image, "front2.jpg");
 
         // Target 4
-//        point = new Point(10.7, -6.8525, 4.8);
-//        quaternion1 = new Quaternion(0f, 1f, 0f, 0f);//new Quaternion(-1f, 0f, 0f, 0f);
-//        moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
         goToTarget(3, 4);
 
         api.flashlightControlFront(.01f);
@@ -79,27 +68,10 @@ public class YourService extends KiboRpcService {
         api.saveMatImage(Vision.undistort(image), "back3.jpg");
 
         // Astronaut
-//        point = new Point(11.143, -6.7607, 4.9654);
-//        quaternion1 = new Quaternion(0f, 0f, 0.707f, 0.707f);
-//        moveAstrobee(point, quaternion1, 'A', true, "AaronDebug");
         goToTarget(4, 5);
-
-        // Get a camera image.
-//        api.flashlightControlFront(.01f);
-//        image = api.getMatNavCam();
-//        image = Vision.undistort(image);
-////        Vision.findAruco(image);
-//        api.saveMatImage(image, "front4.jpg");
-//        image = api.getMatDockCam();
-//        image = Vision.undistort(image, false);
-////        Vision.findAruco(image);
-//        api.saveMatImage(image, "back4.jpg");
-
-
-        // When you move to the front of the astronaut, report the rounding completion.
         api.reportRoundingCompletion();
 
-        Movement.wait(10);
+//        Movement.wait(5);
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
@@ -113,7 +85,7 @@ public class YourService extends KiboRpcService {
         /* ********************************************************** */
         /* Write your code to recognize which item the astronaut has. */
         /* ********************************************************** */
-
+        goToTarget(5, 3);
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();

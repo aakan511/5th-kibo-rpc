@@ -15,15 +15,17 @@ public final class Movement {
     public static KiboRpcApi api;
 
     //Path for going to target so scanningPaths[2]
-    public static Path[] scanningPaths = {new Path(new Quaternion(0f, 0f, -.707f, .707f), new Point(10.9d, -9.8d, 5.19d)),
-            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.9d, -9.5d, 5.19d), new Point(10.925, -8.875, 4.9)),
-            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.7, -7.925, 4.8)),
-            new Path(new Quaternion(0f, 1f, 0f, 0f), new Point(10.7, -6.8525, 4.8)),
+    public static Path[] scanningPaths = {
+            new Path(new Quaternion(0f, 0f, -.707f, .707f), new Point(10.95d, -9.7d, 5.195d)),
+            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.925d, -9.2d, 5.19d), new Point(10.925, -8.875, 4.5)),
+            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.925d, -7.99, 4.5)), //y=-7.925
+            new Path(new Quaternion(0f, 1f, 0f, 0f), new Point(10.7, -7.8, 4.8), new Point(10.6, -6.8525, 4.8)),
             new Path(new Quaternion(0f, 0f, 0.707f, 0.707f), new Point(11.143, -6.7607, 4.9654))};
-    public static Path[] returnPaths = {new Path(new Quaternion(0f, 0f, -.707f, .707f), new Point(11.143, -6.7607, 4.9654), new Point(10.7, -7.925, 4.8), new Point(10.925, -8.875, 4.9), new Point(10.9d, -9.5d, 5.19d)),
-            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(11.143, -6.7607, 4.9654), new Point(10.7, -7.925, 4.8), new Point(10.925, -8.875, 4.9)),
-            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(11.143, -6.7607, 4.9654), new Point(10.7, -7.925, 4.8)),
-            new Path(new Quaternion(0f, 0f, 0.707f, 0.707f), new Point(11.143, -6.7607, 4.9654))};
+    public static Path[] returnPaths = {
+            new Path(new Quaternion(0f, 0f, -.707f, .707f), new Point(10.6, -6.8525, 4.8), new Point(10.7, -7.8, 4.8),  new Point(10.925d, -7.99, 4.5), new Point(10.925, -8.875, 4.5),  new Point(10.925d, -9.2d, 5.19d), new Point(10.95d, -9.7d, 5.195d)),
+            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.6, -6.8525, 4.8), new Point(10.7, -7.8, 4.8),  new Point(10.925d, -7.99, 4.5), new Point(10.925, -8.875, 4.5)),
+            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.6, -6.8525, 4.8), new Point(10.7, -7.8, 4.8),  new Point(10.925d, -7.99, 4.5)),
+            new Path(new Quaternion(0f, 1f, 0f, 0f), new Point(10.6, -6.8525, 4.8))};
 
     private Movement() {}
 

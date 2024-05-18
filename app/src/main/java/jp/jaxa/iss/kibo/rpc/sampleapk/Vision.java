@@ -254,8 +254,10 @@ public final class Vision {
 
                 if (ids.get(i, 0)[0] == 100) {
                     int target = findTarget(descriptor);
-                    Movement.goToTarget(5, target); //really ugly... should be refactored eventually
+                    //Movement.goToTarget(5, target); //really ugly... should be refactored eventually
                     Log.i("FinalLocation", "Final target : " + target);
+                    currTarget = target;
+                    return new String[]{"" + target};
                 }
 
                 Log.i("findAruco", numObjects + ", " + category + ", " + (ids.get(i, 0)[0] - 100));
@@ -314,14 +316,14 @@ public final class Vision {
         //try gaussian blur method for improved accuracy
         bitwise_not(thresh, thresh);
 
-        api.saveMatImage(thresh, "invertedThresh.png");
+        api.saveMatImage(thresh, "invertedThresh_" + currTarget + ".png");
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat heirarchy = new Mat();
         Imgproc.findContours(thresh, contours, heirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
         Imgproc.drawContours(in, contours, -1, new Scalar(255));
-        api.saveMatImage(in, "countours" + contours.size() + ".png");
+        api.saveMatImage(in, "countours" + currTarget + ".png");
 
         return contours.size();
     }
