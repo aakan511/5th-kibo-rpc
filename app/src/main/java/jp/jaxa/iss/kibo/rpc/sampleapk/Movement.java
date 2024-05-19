@@ -25,7 +25,11 @@ public final class Movement {
             new Path(new Quaternion(0f, 0f, -.707f, .707f), new Point(10.6, -6.8525, 4.8), new Point(10.7, -7.8, 4.8),  new Point(10.925d, -7.99, 4.5), new Point(10.925, -8.875, 4.5),  new Point(10.925d, -9.2d, 5.19d), new Point(10.95d, -9.7d, 5.195d)),
             new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.6, -6.8525, 4.8), new Point(10.7, -7.8, 4.8),  new Point(10.925d, -7.99, 4.5), new Point(10.925, -8.875, 4.5)),
             new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.6, -6.8525, 4.8), new Point(10.7, -7.8, 4.8),  new Point(10.925d, -7.99, 4.5)),
-            new Path(new Quaternion(0f, 1f, 0f, 0f), new Point(10.6, -6.8525, 4.8))};
+            new Path(new Quaternion(0f, 1f, 0f, 0f), new Point(10.6, -6.8525, 4.8)),
+            new Path(new Quaternion(0f, 1f, 0f, 0f), new Point(10.6, -6.8525, 4.8), new Point(10.7, -7.8, 4.8), new Point(10.925d, -8.0, 4.5)),
+            new Path(new Quaternion(0f, 1f, 0f, 0f), new Point(10.6, -6.8525, 4.8), new Point(10.7, -7.8, 4.8), new Point(10.925d, -8.0, 4.5), new Point(10.95d, -9.7d, 5.195d))
+    
+    };
 
     private Movement() {}
 
