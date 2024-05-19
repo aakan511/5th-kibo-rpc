@@ -85,6 +85,7 @@ public class YourService extends KiboRpcService {
         /* ********************************************************** */
         /* Write your code to recognize which item the astronaut has. */
         /* ********************************************************** */
+        goToTarget(5, 4); // To Target 2
         goToTarget(5, 3);
 
         api.flashlightControlFront(.01f);
