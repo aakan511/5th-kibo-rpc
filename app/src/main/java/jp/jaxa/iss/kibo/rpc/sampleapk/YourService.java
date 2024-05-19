@@ -71,7 +71,7 @@ public class YourService extends KiboRpcService {
         goToTarget(4, 5);
         api.reportRoundingCompletion();
 
-        Movement.wait(1);
+        Movement.wait(5);
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
@@ -84,8 +84,19 @@ public class YourService extends KiboRpcService {
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
+        Point adjustment = Vision.arucoOffset(image, Vision.currTarget);
+        Point currPos = api.getRobotKinematics().getPosition();
+        Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
         image = Vision.undistort(image);
         api.saveMatImage(image, "front6.jpg");
+
+        moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "finalAdjustment");
+
+        api.flashlightControlFront(.01f);
+        image = api.getMatNavCam();
+        image = Vision.undistort(image);
+        api.saveMatImage(image, "front7.jpg");
+
         api.takeTargetItemSnapshot();
     }
 

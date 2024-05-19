@@ -11,31 +11,23 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.DMatch;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.features2d.DescriptorMatcher;
-import org.opencv.features2d.ORB;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.ArucoDetector;
 import org.opencv.objdetect.Dictionary;
-import org.opencv.objdetect.QRCodeDetector;
 
 import org.opencv.features2d.SIFT;
 import org.opencv.core.MatOfKeyPoint;
-import org.opencv.features2d.Features2d;
 import org.opencv.features2d.BFMatcher;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import gov.nasa.arc.astrobee.android.gs.StartGuestScienceService;
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcApi;
 
 
@@ -328,13 +320,32 @@ public final class Vision {
         return contours.size();
     }
 
-//    public static void arucoOffset(Mat img, int target) {
-//        ArrayList<Mat> corners = new ArrayList<>();
-//        Mat ids = new Mat();
-//        Mat rvec = new Mat();
-//        Mat tvec = new Mat();
-//
-//        arucoDetector.detectMarkers(img, corners, ids);
-//
-//    }
+    public static gov.nasa.arc.astrobee.types.Point arucoOffset(Mat img, int target) {
+        ArrayList<Mat> corners = new ArrayList<>();
+        Mat ids = new Mat();
+        Mat rvec = new Mat();
+        Mat tvec = new Mat();
+
+        Aruco.estimatePoseSingleMarkers(corners, .05f, camMat, distortionCoefficients, rvec, tvec);
+        arucoDetector.detectMarkers(img, corners, ids);
+        for (int i = 0; i < corners.size(); i++) {
+            if (ids.get(i, 0)[0] - 100 == target) {
+                double[] pt = tvec.row(i).get(0, 0);
+
+                if (target == 1) {
+                    return new gov.nasa.arc.astrobee.types.Point(pt[0], -pt[2], pt[1]);
+                } else if (target == 2 || target == 3) {
+                    return new gov.nasa.arc.astrobee.types.Point(pt[0], pt[1], -pt[2]);
+                } else if (target == 4) {
+                    return new gov.nasa.arc.astrobee.types.Point(-pt[2], -pt[0], -pt[1]);
+                }
+            }
+        }
+        return null;
+
+
+
+
+
+    }
 }
