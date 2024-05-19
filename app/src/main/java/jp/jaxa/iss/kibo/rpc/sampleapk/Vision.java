@@ -32,6 +32,7 @@ import jp.jaxa.iss.kibo.rpc.api.KiboRpcApi;
 
 
 import static android.content.ContentValues.TAG;
+import static org.opencv.calib3d.Calib3d.solvePnP;
 import static org.opencv.core.Core.bitwise_not;
 import static org.opencv.core.Core.min;
 import static org.opencv.objdetect.Objdetect.DICT_5X5_250;
@@ -326,18 +327,21 @@ public final class Vision {
         Mat rvec = new Mat();
         Mat tvec = new Mat();
 
-        Aruco.estimatePoseSingleMarkers(corners, .05f, camMat, distortionCoefficients, rvec, tvec);
+
         arucoDetector.detectMarkers(img, corners, ids);
+        Aruco.estimatePoseSingleMarkers(corners, .05f, camMat, distortionCoefficients, rvec, tvec);
+
         for (int i = 0; i < corners.size(); i++) {
             if (ids.get(i, 0)[0] - 100 == target) {
                 double[] pt = tvec.row(i).get(0, 0);
+                pt[2] = 0;
 
                 if (target == 1) {
                     return new gov.nasa.arc.astrobee.types.Point(pt[0], -pt[2], pt[1]);
                 } else if (target == 2 || target == 3) {
-                    return new gov.nasa.arc.astrobee.types.Point(pt[0], pt[1], -pt[2]);
+                    return new gov.nasa.arc.astrobee.types.Point(pt[1], pt[0], -pt[2]);
                 } else if (target == 4) {
-                    return new gov.nasa.arc.astrobee.types.Point(-pt[2], -pt[0], -pt[1]);
+                    return new gov.nasa.arc.astrobee.types.Point(-pt[2], pt[0], -pt[1]);
                 }
             }
         }

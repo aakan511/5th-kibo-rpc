@@ -1,6 +1,7 @@
 package jp.jaxa.iss.kibo.rpc.sampleapk;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcService;
 
@@ -80,11 +81,13 @@ public class YourService extends KiboRpcService {
         api.saveMatImage(image, "front5.jpg");
 
         // Target item
+//        Vision.currTarget = 1; // use this to test return paths
         goToTarget(5, Vision.currTarget);
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
         Point adjustment = Vision.arucoOffset(image, Vision.currTarget);
+        Log.i("adjustment", "(" + adjustment.getX() + ", " + adjustment.getY() + ", " + adjustment.getZ() + ")");
         Point currPos = api.getRobotKinematics().getPosition();
         Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
         image = Vision.undistort(image);
