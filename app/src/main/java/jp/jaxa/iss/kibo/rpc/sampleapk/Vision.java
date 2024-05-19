@@ -327,4 +327,14 @@ public final class Vision {
 
         return contours.size();
     }
+
+//    public static void arucoOffset(Mat img, int target) {
+//        ArrayList<Mat> corners = new ArrayList<>();
+//        Mat ids = new Mat();
+//        Mat rvec = new Mat();
+//        Mat tvec = new Mat();
+//
+//        arucoDetector.detectMarkers(img, corners, ids);
+//
+//    }
 }

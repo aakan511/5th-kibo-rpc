@@ -71,39 +71,21 @@ public class YourService extends KiboRpcService {
         goToTarget(4, 5);
         api.reportRoundingCompletion();
 
-//        Movement.wait(5);
+        Movement.wait(1);
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
         image = Vision.undistort(image);
         Vision.findAruco(image);
         api.saveMatImage(image, "front5.jpg");
-        image = api.getMatDockCam();
-        image = Vision.undistort(image, false);
-//        Vision.findAruco(image);
-        api.saveMatImage(image, "back5.jpg");
-        /* ********************************************************** */
-        /* Write your code to recognize which item the astronaut has. */
-        /* ********************************************************** */
-        goToTarget(5, 3);
+
+        // Target item
+        goToTarget(5, Vision.currTarget);
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
         image = Vision.undistort(image);
-//        Vision.findAruco(image);
         api.saveMatImage(image, "front6.jpg");
-        image = api.getMatDockCam();
-        image = Vision.undistort(image, false);
-//        Vision.findAruco(image);
-        api.saveMatImage(image, "back6.jpg");
-        // Let's notify the astronaut when you recognize it.
-        api.notifyRecognitionItem();
-
-        /* ******************************************************************************************************* */
-        /* Write your code to move Astrobee to the location of the target item (what the astronaut is looking for) */
-        /* ******************************************************************************************************* */
-
-        // Take a snapshot of the target item.
         api.takeTargetItemSnapshot();
     }
 
