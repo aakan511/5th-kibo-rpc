@@ -3,6 +3,7 @@ package jp.jaxa.iss.kibo.rpc.sampleapk;
 import android.graphics.Bitmap;
 import android.util.Log;
 
+import jp.jaxa.iss.kibo.rpc.api.KiboRpcApi;
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcService;
 
 import gov.nasa.arc.astrobee.types.Point;
@@ -30,43 +31,95 @@ public class YourService extends KiboRpcService {
         // Target 1
         goToTarget(0, 1);
 
-        api.flashlightControlFront(.01f);
-        Mat image = api.getMatNavCam();
-        image = Vision.undistort(image);
-        Vision.findAruco(image);
-        api.saveMatImage(image, "front0.jpg");
+//        //api.flashlightControlFront(.01f);
+//        Mat image = api.getMatNavCam();
+//
+//        Point adj = Vision.arucoOffsetDebug(image, Vision.currTarget);
+//        double distance = Vision.distance(adj);
+//        Log.i("distanceReports", "target " + Vision.currTarget + " distance : " + distance);
+//        Log.i("distanceReportsPoint", "(" + adj.getX() + ", " + adj.getY() + ", " + adj.getZ() + ")");
+//        if (distance > .30) {
+//            Point currPos1 = api.getRobotKinematics().getPosition();
+//            Point absPos = new Point(currPos1.getX() + adj.getX(), currPos1.getY() + adj.getY(), currPos1.getZ() + adj.getZ());
+//            moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "TESTINKH");
+//            api.saveMatImage(image, "front0OG.jpg");
+//            image = api.getMatNavCam();
+//        }
+//        image = Vision.undistort(image);
+//        Vision.findAruco(image);
+//        api.saveMatImage(image, "front0.jpg");
+        takeSnapshot(api);
 
         // Target 2
         goToTarget(1, 2);
 
-        api.flashlightControlFront(.01f);
-        image = api.getMatNavCam();
-        image = Vision.undistort(image);
-        Vision.findAruco(image);
-        api.saveMatImage(image, "front1.jpg");
+//        //api.flashlightControlFront(.01f);
+//        image = api.getMatNavCam();
+//
+//        adj = Vision.arucoOffsetDebug(image, Vision.currTarget);
+//        distance = Vision.distance(adj);
+//        Log.i("distanceReports", "target " + Vision.currTarget + " distance : " + distance);
+//        Log.i("distanceReportsPoint", "(" + adj.getX() + ", " + adj.getY() + ", " + adj.getZ() + ")");
+//        if (distance > .30) {
+//            Point currPos1 = api.getRobotKinematics().getPosition();
+//            Point absPos = new Point(currPos1.getX() + adj.getX(), currPos1.getY() + adj.getY(), currPos1.getZ() + adj.getZ());
+//            moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "TESTINKH");
+//            api.saveMatImage(image, "front1OG.jpg");
+//            image = api.getMatNavCam();
+//
+//
+//        }
+//        image = Vision.undistort(image);
+//        Vision.findAruco(image);
+//        api.saveMatImage(image, "front1.jpg");
+        takeSnapshot(api);
 
 
         // Target 3
         goToTarget(2, 3);
 
-        api.flashlightControlFront(.01f);
-        image = api.getMatNavCam();
-        image = Vision.undistort(image);
-        Vision.findAruco(image);
-        api.saveMatImage(image, "front2.jpg");
+        //api.flashlightControlFront(.01f);
+//        image = api.getMatNavCam();
+//
+//        adj = Vision.arucoOffsetDebug(image, Vision.currTarget);
+//        distance = Vision.distance(adj);
+//        Log.i("distanceReports", "target " + Vision.currTarget + " distance : " + distance);
+//        Log.i("distanceReportsPoint", "(" + adj.getX() + ", " + adj.getY() + ", " + adj.getZ() + ")");
+//        if (distance > .30) {
+//            Point currPos1 = api.getRobotKinematics().getPosition();
+//            Point absPos = new Point(currPos1.getX() + adj.getX(), currPos1.getY() + adj.getY(), currPos1.getZ() + adj.getZ());
+//            moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "TESTINKH");
+//            api.saveMatImage(image, "front2OG.jpg");
+//            image = api.getMatNavCam();
+//
+//        }
+//        image = Vision.undistort(image);
+//
+//        Vision.findAruco(image);
+//        api.saveMatImage(image, "front2.jpg");
+        takeSnapshot(api);
 
         // Target 4
         goToTarget(3, 4);
 
-        api.flashlightControlFront(.01f);
-        image = api.getMatNavCam();
-        image = Vision.undistort(image);
-        Vision.findAruco(image);
-        api.saveMatImage(image, "front3.jpg");
-        image = api.getMatDockCam();
-        image = Vision.undistort(image, false);
-        Vision.findAruco(image);
-        api.saveMatImage(Vision.undistort(image), "back3.jpg");
+        //api.flashlightControlFront(.01f);
+//        image = api.getMatNavCam();
+//
+//        adj = Vision.arucoOffsetDebug(image, Vision.currTarget);
+//        distance = Vision.distance(adj);
+//        Log.i("distanceReports", "target " + Vision.currTarget + " distance : " + distance);
+//        Log.i("distanceReportsPoint", "(" + adj.getX() + ", " + adj.getY() + ", " + adj.getZ() + ")");
+//        if (distance > .30) {
+//            Point currPos1 = api.getRobotKinematics().getPosition();
+//            Point absPos = new Point(currPos1.getX() + adj.getX(), currPos1.getY() + adj.getY(), currPos1.getZ() + adj.getZ());
+//            moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "TESTINKH");
+//            api.saveMatImage(image, "front3OG.jpg");
+//            image = api.getMatNavCam();
+//        }
+//        image = Vision.undistort(image);
+//        Vision.findAruco(image);
+//        api.saveMatImage(image, "front3.jpg");
+        takeSnapshot(api);
 
         // Astronaut
         goToTarget(4, 5);
@@ -75,7 +128,7 @@ public class YourService extends KiboRpcService {
         Movement.wait(5);
 
         api.flashlightControlFront(.01f);
-        image = api.getMatNavCam();
+        Mat image = api.getMatNavCam();
         image = Vision.undistort(image);
         Vision.findAruco(image);
         api.saveMatImage(image, "front5.jpg");
@@ -113,7 +166,23 @@ public class YourService extends KiboRpcService {
         // write your plan 3 here.
     }
 
-    public static String intify(float f) {
-        return "" + (int) (f * 100);
+    public static void takeSnapshot(KiboRpcApi api) {
+        //api.flashlightControlFront(.01f);
+        Mat image = api.getMatNavCam();
+        int target = Vision.currTarget;
+        Point adj = Vision.arucoOffsetDebug(image, target);
+        double distance = Vision.distance(adj);
+        Log.i("distanceReports", "target " + target + " distance : " + distance);
+        Log.i("distanceReportsPoint", "(" + adj.getX() + ", " + adj.getY() + ", " + adj.getZ() + ")");
+        if (distance > .30) {
+            Point currPos1 = api.getRobotKinematics().getPosition();
+            Point absPos = new Point(currPos1.getX() + adj.getX(), currPos1.getY() + adj.getY(), currPos1.getZ() + adj.getZ());
+            moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "TESTINKH");
+            api.saveMatImage(image, "front" + target + "OG.jpg");
+            image = api.getMatNavCam();
+        }
+        image = Vision.undistort(image);
+        Vision.findAruco(image);
+        api.saveMatImage(image, "front" + target + ".jpg");
     }
 }

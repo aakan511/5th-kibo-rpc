@@ -1,6 +1,7 @@
 package jp.jaxa.iss.kibo.rpc.sampleapk;
 
 import android.content.Context;
+import android.provider.ContactsContract;
 import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
@@ -15,6 +16,7 @@ import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.ArucoDetector;
@@ -35,6 +37,7 @@ import static android.content.ContentValues.TAG;
 import static org.opencv.calib3d.Calib3d.solvePnP;
 import static org.opencv.core.Core.bitwise_not;
 import static org.opencv.core.Core.min;
+import static org.opencv.core.Core.minMaxLoc;
 import static org.opencv.objdetect.Objdetect.DICT_5X5_250;
 import static org.opencv.objdetect.Objdetect.getPredefinedDictionary;
 
@@ -234,7 +237,7 @@ public final class Vision {
                 Mat clean = arucoCrop(img, corners.get(i));
                 Mat descriptor = getDescriptors(clean);
                 String category = (ids.get(i, 0)[0] == 100) ? "blank" : classify(descriptor);
-                int numObjects = (ids.get(i, 0)[0] == 100) ? 1 : countObjects(clean);
+                int numObjects = (ids.get(i, 0)[0] == 100) ? 1 : countObjects(clean, img, corners.get(i), 1.00);
 
                 if (allowReport && (int) ids.get(i, 0)[0] - 100 == currTarget) {
                     targetCategories[currTarget - 1] = category;
@@ -303,22 +306,92 @@ public final class Vision {
 
     }
 
-    public static int countObjects(Mat in) {
-        Mat thresh = new Mat();
-        org.opencv.imgproc.Imgproc.threshold(in, thresh, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
-        //try gaussian blur method for improved accuracy
-        bitwise_not(thresh, thresh);
+    public static Mat arucoCrop(Mat in, Mat corner, double scale) {
+        Log.i("arucoCrop", "width: " + corner.size().width + ", height: " + corner.height());
 
+        double[] topLeft =  corner.get(0, 0);
+        double[] topRight = corner.get(0, 1);
+        double[] bottomLeft = corner.get(0, 3);
+        //double[] bottomRight = corner.get(0, 2);
+
+        double[] deltaHorizontal = {topLeft[0] - topRight[0], topLeft[1] - topRight[1]};
+        double[] deltaVertical = {topLeft[0] - bottomLeft[0], topLeft[1] - bottomLeft[1]};
+        double distance = .05;
+
+        double[] dirHorizontal = {deltaHorizontal[0] / distance, deltaHorizontal[1] / distance};
+        double[] dirVertical = {deltaVertical[0] / distance, deltaVertical[1] / distance};
+
+        Point topLeftBound = new Point( scale * (dirHorizontal[0] * .2075 + dirVertical[0] * .0125) + topLeft[0],
+                scale * (dirHorizontal[1] * .2075 + dirVertical[1] * .0125) + topLeft[1]);
+        Point topRightBound = new Point(scale * (dirHorizontal[0] * .01 + dirVertical[0] * .0125) + topLeft[0],
+                scale * (dirHorizontal[1] * .01 + dirVertical[1] * .0125) + topLeft[1]);
+        Point bottomRightBound = new Point(scale * (-1 * dirVertical[0] * .0875 + dirHorizontal[0] * .01) + bottomLeft[0],
+                scale * (-1 * dirVertical[1] * .0875 + dirHorizontal[1] * .01) + bottomLeft[1]);
+        Point bottomLeftBound = new Point(scale * (-1 * dirVertical[0] * .15) + topLeftBound.x,
+                scale * (-1 * dirVertical[1] * .15) + topLeftBound.y);
+        List<MatOfPoint> points = new ArrayList<>();
+        points.add(new MatOfPoint(topLeftBound, topRightBound, bottomRightBound, bottomLeftBound));
+
+        Mat mask = Mat.zeros(in.size(), in.type());
+        Imgproc.fillPoly(mask, points, new Scalar(255));
+        api.saveMatImage(mask, "mask.png");
+
+        Mat invert = new Mat();
+        Core.bitwise_not(in, invert);
+        Mat cropped = new Mat();
+        Core.bitwise_and(invert, mask, cropped);
+        Core.bitwise_not(cropped, cropped);
+        return cropped;
+
+    }
+
+    public static int countObjects(Mat in, Mat og, Mat corner, double scale) {
+        Mat thresh = new Mat();
+        //Mat inv = new Mat();
+        //bitwise_not(in, inv);
+
+        //bitwise_not(thresh, thresh);
+
+//        Mat dilated = new Mat();
+//        Mat kernel = Mat.ones(new Size(1, 1), CvType.CV_8UC1);
+//        Imgproc.dilate(thresh, dilated, kernel, new Point(-1, -1), 5);
+
+//        thresh = dilated;
+
+
+        Imgproc.threshold(in, thresh, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
+        //try gaussian blur method for improved accuracy
+
+
+
+
+        bitwise_not(thresh, thresh);
         api.saveMatImage(thresh, "invertedThresh_" + currTarget + ".png");
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat heirarchy = new Mat();
         Imgproc.findContours(thresh, contours, heirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        Imgproc.drawContours(in, contours, -1, new Scalar(255));
-        api.saveMatImage(in, "countours" + currTarget + ".png");
+//        Imgproc.drawContours(in, contours, -1, new Scalar(255));
+//        api.saveMatImage(in, "countours" + currTarget + ".png");
+
+
+//        if (contours.size() > 5 && scale > 0) {
+//            return countObjects(arucoCrop(og, corner, scale - .05), og, corner, scale - .05);
+//        }
 
         return contours.size();
+
+//        Imgproc.threshold(in, thresh, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
+//        bitwise_not(thresh, thresh);
+//        Imgproc.findContours(thresh, contours, heirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+//
+//        Imgproc.drawContours(in, contours, -1, new Scalar(255));
+//        api.saveMatImage(in, "countours1_" + currTarget + ".png");
+//
+//        api.saveMatImage(thresh, "thresh1_" + currTarget + ".png");
+////        api.saveMatImage(thresh, "thresh1_" + currTarget + ".png");
+//        return contours.size();
     }
 
     public static gov.nasa.arc.astrobee.types.Point arucoOffset(Mat img, int target) {
@@ -346,10 +419,64 @@ public final class Vision {
             }
         }
         return null;
+    }
+
+    public static gov.nasa.arc.astrobee.types.Point arucoOffsetDebug(Mat img, int target) {
+        ArrayList<Mat> corners = new ArrayList<>();
+        Mat ids = new Mat();
+        Mat rvec = new Mat();
+        Mat tvec = new Mat();
 
 
+        arucoDetector.detectMarkers(img, corners, ids);
+        Aruco.estimatePoseSingleMarkers(corners, .05f, camMat, distortionCoefficients, rvec, tvec);
 
+        for (int i = 0; i < corners.size(); i++) {
+            if (ids.get(i, 0)[0] - 100 == target) {
 
+                Mat corner = corners.get(i);
+                double[] topLeft =  corner.get(0, 0);
+                double[] topRight = corner.get(0, 1);
+                double[] bottomLeft = corner.get(0, 3);
+                //double[] bottomRight = corner.get(0, 2);
 
+                double[] deltaHorizontal = {topLeft[0] - topRight[0], topLeft[1] - topRight[1]};
+                double[] deltaVertical = {topLeft[0] - bottomLeft[0], topLeft[1] - bottomLeft[1]};
+
+                double distHorizontal = Math.sqrt(deltaHorizontal[0] * deltaHorizontal[0] + deltaHorizontal[1] * deltaHorizontal[1]);
+                double distVertical = Math.sqrt(deltaVertical[0] * deltaVertical[0] + deltaVertical[1] * deltaVertical[1]);
+
+                deltaHorizontal[0] = deltaHorizontal[0] / distHorizontal;
+                deltaHorizontal[1] = deltaHorizontal[1] / distHorizontal;
+
+                deltaVertical[0] = deltaVertical[0] / distVertical;
+                deltaVertical[1] = deltaVertical[1] / distVertical;
+
+                double[] centerAdj = {(.1375 * deltaHorizontal[0]) + (-.0375 * deltaVertical[0]), (.1375 * deltaHorizontal[0]) + (-.0375 * deltaVertical[0])};
+
+                double[] pt = tvec.row(i).get(0, 0);
+                pt[2] = 0;
+                pt[0] = pt[0] + centerAdj[0];
+                pt[1] = pt[1] + centerAdj[1];
+
+                if (target == 1) {
+                    return new gov.nasa.arc.astrobee.types.Point(pt[0], -pt[2], pt[1]);
+                } else if (target == 2 || target == 3) {
+                    return new gov.nasa.arc.astrobee.types.Point(pt[1], pt[0], -pt[2]);
+                } else{
+                    return new gov.nasa.arc.astrobee.types.Point(-pt[2], pt[0], -pt[1]);
+                }
+            }
+        }
+        Log.i("ERROR", currTarget + " target's aruco marker not found");
+        return new gov.nasa.arc.astrobee.types.Point();
+    }
+
+    public static double distance (gov.nasa.arc.astrobee.types.Point p) {
+        if (p == null) {
+            Log.i("ERRORERROR", "point passed into distance is null");
+            return 0;
+        }
+        return Math.sqrt(p.getX() * p.getX() + p.getY() * p.getY() + p.getZ() * p.getZ());
     }
 }
