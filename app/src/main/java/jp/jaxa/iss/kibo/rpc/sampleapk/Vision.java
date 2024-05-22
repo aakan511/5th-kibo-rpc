@@ -58,7 +58,7 @@ public final class Vision {
     public static Dictionary dict = getPredefinedDictionary(DICT_5X5_250);
     public static ArucoDetector arucoDetector = new ArucoDetector(dict);
     public static String[] targetCategories = new String[4];
-    public static double[] ratios = {0.9310563647676213, 0.927241607216102, 1.018599276357519, 1.0655839142379049, 0.8938588723136022, 0.8079078257333207, 0.7626616207030666, 0.7752607379017146, 0.886756275652506, 0.8558393198753002}; //ratio of contour perimeter / bounding circle circumference
+    public static double[] ratios = {0.6670481487821136, 0.4268646448961206, 0.26110240847935834, 0.26040570295263815, 0.6203050939687318, 0.18730484126368557, 0.21930514990471245, 0.3004298433365385, 0.4955997263661711, 0.4553772661089809};//{0.9310563647676213, 0.927241607216102, 1.018599276357519, 1.0655839142379049, 0.8938588723136022, 0.8079078257333207, 0.7626616207030666, 0.7752607379017146, 0.886756275652506, 0.8558393198753002}; //ratio of contour perimeter / bounding circle circumference
     public static int currTarget = 1;
 
     public Vision(KiboRpcApi api, Context context){
@@ -262,7 +262,7 @@ public final class Vision {
                 }
 
                 Log.i("findAruco", numObjects + ", " + category + ", " + (ids.get(i, 0)[0] - 100));
-                api.saveMatImage(clean, "target_" + ((int) (ids.get(i, 0)[0] - 100)) + "_cropped.png");
+                api.saveMatImage(clean, "target_" + ((int) (ids.get(i, 0)[0] - 100)) + "_" + randName() + "_cropped.png");
                 result[i] = category;
             }
             return result;
@@ -300,7 +300,7 @@ public final class Vision {
 
         Mat mask = Mat.zeros(in.size(), in.type());
         Imgproc.fillPoly(mask, points, new Scalar(255));
-        api.saveMatImage(mask, "mask.png");
+//        api.saveMatImage(mask, "mask.png");
 
         Mat invert = new Mat();
         Core.bitwise_not(in, invert);
@@ -339,7 +339,7 @@ public final class Vision {
 
         Mat mask = Mat.zeros(in.size(), in.type());
         Imgproc.fillPoly(mask, points, new Scalar(255));
-        api.saveMatImage(mask, "mask.png");
+//        api.saveMatImage(mask, "mask.png");
 
         Mat invert = new Mat();
         Core.bitwise_not(in, invert);
@@ -354,7 +354,7 @@ public final class Vision {
         Mat thresh = new Mat();
         Imgproc.threshold(in, thresh, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
         bitwise_not(thresh, thresh);
-        api.saveMatImage(thresh, "invertedThresh_" + currTarget + ".png");
+//        api.saveMatImage(thresh, "invertedThresh_" + currTarget + ".png");
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat heirarchy = new Mat();
@@ -367,7 +367,7 @@ public final class Vision {
         Mat thresh = new Mat();
         Imgproc.threshold(in, thresh, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
         bitwise_not(thresh, thresh);
-        api.saveMatImage(thresh, "invertedThresh_" + currTarget + ".png");
+//        api.saveMatImage(thresh, "invertedThresh_" + currTarget + ".png");
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat heirarchy = new Mat();
@@ -383,13 +383,13 @@ public final class Vision {
             Point center = new Point();
             Imgproc.minEnclosingCircle(contour, center, radius);
 
-            double ratio = Imgproc.arcLength(contour, true) / (Math.PI * 2 * radius[0]);
+            double ratio = Imgproc.contourArea(contour) / (Math.PI * radius[0] * radius[0]);//Imgproc.arcLength(contour, true) / (Math.PI * 2 * radius[0]);
             Log.i("new countobjects", "ratio : " + ratio);
 
             double percentDiff = (ratio - ratios[category]) / ratios[category];
             Log.i("new countobjects", "percent difference : " + percentDiff);
 
-            if (Math.abs(percentDiff) > .05) {
+            if (Math.abs(percentDiff) > .1) {
                 cnt += 2;
             } else {
                 cnt += 1;
@@ -485,5 +485,11 @@ public final class Vision {
             return 0;
         }
         return Math.sqrt(p.getX() * p.getX() + p.getY() * p.getY() + p.getZ() * p.getZ());
+    }
+
+
+    private static String randName () {
+        int random = (int) (Math.random() * 10000000);
+        return "" + random;
     }
 }

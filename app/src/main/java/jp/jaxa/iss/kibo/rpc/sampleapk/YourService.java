@@ -64,7 +64,7 @@ public class YourService extends KiboRpcService {
         Mat image = api.getMatNavCam();
         image = Vision.undistort(image);
         Vision.findAruco(image);
-        api.saveMatImage(image, "front5.jpg");
+//        api.saveMatImage(image, "front5.jpg");
 
         // Target item
 //        Vision.currTarget = 1; // use this to test return paths
@@ -77,14 +77,14 @@ public class YourService extends KiboRpcService {
         Point currPos = api.getRobotKinematics().getPosition();
         Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
         image = Vision.undistort(image);
-        api.saveMatImage(image, "front6.jpg");
+//        api.saveMatImage(image, "front6.jpg");
 
         moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "finalAdjustment");
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
         image = Vision.undistort(image);
-        api.saveMatImage(image, "front7.jpg");
+//        api.saveMatImage(image, "front7.jpg");
 
         api.takeTargetItemSnapshot();
     }
@@ -111,11 +111,11 @@ public class YourService extends KiboRpcService {
             Point currPos1 = api.getRobotKinematics().getPosition();
             Point absPos = new Point(currPos1.getX() + adj.getX(), currPos1.getY() + adj.getY(), currPos1.getZ() + adj.getZ());
             moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "TESTINKH");
-            api.saveMatImage(image, "front" + target + "OG.jpg");
+//            api.saveMatImage(image, "front" + target + "OG.jpg");
             image = api.getMatNavCam();
         }
         image = Vision.undistort(image);
         Vision.findAruco(image);
-        api.saveMatImage(image, "front" + target + ".jpg");
+//        api.saveMatImage(image, "front" + target + ".jpg");
     }
 }
