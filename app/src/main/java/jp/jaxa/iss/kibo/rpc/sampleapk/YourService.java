@@ -32,10 +32,14 @@ public class YourService extends KiboRpcService {
         goToTarget(0, 1);
         takeSnapshot(api);
 
+        if (api.getRobotKinematics().getPosition().getX() <= 10.88) {
+            moveAstrobee( new Point(10.9d, -9.6d, 5.19d), api.getRobotKinematics().getOrientation(), 'A', false, "readjusting");
+            Log.i("Target1", "had to readjust");
+        }
+
         // Target 2
         goToTarget(1, 2);
         takeSnapshot(api);
-
         if (api.getRobotKinematics().getPosition().getX() <= 10.7) {
             moveAstrobee(Movement.scanningPaths[1].points[Movement.scanningPaths[1].points.length - 1], Movement.scanningPaths[1].orientation, 'A', false, "readjusting");
             Log.i("Target2", "had to readjust");

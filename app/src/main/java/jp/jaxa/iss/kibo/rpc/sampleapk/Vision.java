@@ -14,6 +14,7 @@ import org.opencv.core.DMatch;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -57,6 +58,7 @@ public final class Vision {
     public static Dictionary dict = getPredefinedDictionary(DICT_5X5_250);
     public static ArucoDetector arucoDetector = new ArucoDetector(dict);
     public static String[] targetCategories = new String[4];
+    public static double[] ratios = {0.9310563647676213, 0.927241607216102, 1.018599276357519, 1.0655839142379049, 0.8938588723136022, 0.8079078257333207, 0.7626616207030666, 0.7752607379017146, 0.886756275652506, 0.8558393198753002}; //ratio of contour perimeter / bounding circle circumference
     public static int currTarget = 1;
 
     public Vision(KiboRpcApi api, Context context){
@@ -182,15 +184,17 @@ public final class Vision {
         return get_min(descriptor, descriptors[index]);
     }
 
-    public static String classify(Mat descriptor) {
+    public static int classify(Mat descriptor) {
 
         double min = Double.MAX_VALUE;
-        String minCategory = "blank";
+        //String minCategory = "blank";
+        int minCategory = -1;
         for (int i = 0; i < categories.length; i++) {
             double temp = get_min(descriptor, i);
             if (temp < min) {
                 min = temp;
-                minCategory = categories[i];
+                //minCategory = categories[i];
+                minCategory = i;
             }
             Log.i("classify", categories[i] + " : " + temp);
         }
@@ -236,8 +240,9 @@ public final class Vision {
 
                 Mat clean = arucoCrop(img, corners.get(i));
                 Mat descriptor = getDescriptors(clean);
-                String category = (ids.get(i, 0)[0] == 100) ? "blank" : classify(descriptor);
-                int numObjects = (ids.get(i, 0)[0] == 100) ? 1 : countObjects(clean, img, corners.get(i), 1.00);
+                int categoryNum = classify(descriptor);
+                String category = (ids.get(i, 0)[0] == 100) ? "blank" : categories[categoryNum];
+                int numObjects = (ids.get(i, 0)[0] == 100) ? 1 : countObjects(clean, categoryNum);
 
                 if (allowReport && (int) ids.get(i, 0)[0] - 100 == currTarget) {
                     targetCategories[currTarget - 1] = category;
@@ -345,26 +350,22 @@ public final class Vision {
 
     }
 
-    public static int countObjects(Mat in, Mat og, Mat corner, double scale) {
+    public static int countObjects(Mat in) {
         Mat thresh = new Mat();
-        //Mat inv = new Mat();
-        //bitwise_not(in, inv);
-
-        //bitwise_not(thresh, thresh);
-
-//        Mat dilated = new Mat();
-//        Mat kernel = Mat.ones(new Size(1, 1), CvType.CV_8UC1);
-//        Imgproc.dilate(thresh, dilated, kernel, new Point(-1, -1), 5);
-
-//        thresh = dilated;
-
-
         Imgproc.threshold(in, thresh, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
-        //try gaussian blur method for improved accuracy
+        bitwise_not(thresh, thresh);
+        api.saveMatImage(thresh, "invertedThresh_" + currTarget + ".png");
 
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat heirarchy = new Mat();
+        Imgproc.findContours(thresh, contours, heirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        return contours.size();
 
+    }
 
-
+    public static int countObjects(Mat in, int category) {
+        Mat thresh = new Mat();
+        Imgproc.threshold(in, thresh, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
         bitwise_not(thresh, thresh);
         api.saveMatImage(thresh, "invertedThresh_" + currTarget + ".png");
 
@@ -372,26 +373,31 @@ public final class Vision {
         Mat heirarchy = new Mat();
         Imgproc.findContours(thresh, contours, heirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-//        Imgproc.drawContours(in, contours, -1, new Scalar(255));
-//        api.saveMatImage(in, "countours" + currTarget + ".png");
 
+        int cnt = 0;
 
-//        if (contours.size() > 5 && scale > 0) {
-//            return countObjects(arucoCrop(og, corner, scale - .05), og, corner, scale - .05);
-//        }
+        for (MatOfPoint contourRaw : contours) {
+            MatOfPoint2f contour = new MatOfPoint2f();
+            contourRaw.convertTo(contour, CvType.CV_32F);
+            float[] radius = new float[1];
+            Point center = new Point();
+            Imgproc.minEnclosingCircle(contour, center, radius);
 
-        return contours.size();
+            double ratio = Imgproc.arcLength(contour, true) / (Math.PI * 2 * radius[0]);
+            Log.i("new countobjects", "ratio : " + ratio);
 
-//        Imgproc.threshold(in, thresh, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
-//        bitwise_not(thresh, thresh);
-//        Imgproc.findContours(thresh, contours, heirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-//
-//        Imgproc.drawContours(in, contours, -1, new Scalar(255));
-//        api.saveMatImage(in, "countours1_" + currTarget + ".png");
-//
-//        api.saveMatImage(thresh, "thresh1_" + currTarget + ".png");
-////        api.saveMatImage(thresh, "thresh1_" + currTarget + ".png");
-//        return contours.size();
+            double percentDiff = (ratio - ratios[category]) / ratios[category];
+            Log.i("new countobjects", "percent difference : " + percentDiff);
+
+            if (Math.abs(percentDiff) > .05) {
+                cnt += 2;
+            } else {
+                cnt += 1;
+            }
+
+        }
+
+        return cnt;
     }
 
     public static gov.nasa.arc.astrobee.types.Point arucoOffset(Mat img, int target) {
