@@ -418,7 +418,8 @@ public final class Vision {
                 }
             }
         }
-        return null;
+        Log.i("ERROR", currTarget + " target's aruco marker not found(arucoOffset)");
+        return new gov.nasa.arc.astrobee.types.Point();
     }
 
     public static gov.nasa.arc.astrobee.types.Point arucoOffsetDebug(Mat img, int target) {
