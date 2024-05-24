@@ -309,6 +309,89 @@ public final class Vision {
         return cropped;
 
     }
+    
+    public static Mat arucoCropModel(Mat frame) {
+        ArucoDetector detector = ArucoDetector.create();
+        Dictionary dictionary = Dictionary.get(Dictionary.DICT_5X5_250);
+        detector.setDictionary(dictionary);
+        Mat[] corners = new Mat[1];
+        Mat ids = new Mat();
+        Mat rejectedImgPoints = new Mat();
+        detector.detectMarkers(frame, corners, ids, rejectedImgPoints);
+
+        if (corners.length > 0) {
+            ids = ids.flatten();
+            // count
+            for (int i = 0; i < ids.total(); i++) {
+                int markerId = (int) ids.get(i, 0)[0];
+                System.out.println(markerId);
+
+                int length = 640;
+                // Extract the marker corners
+                Point topLeft = new Point(corners[0].get(i, 0));
+                Point topRight = new Point(corners[0].get(i, 1));
+                Point bottomLeft = new Point(corners[0].get(i, 3));
+                Point bottomRight = new Point(corners[0].get(i, 2));
+
+                // Convert the (x,y) coordinate pairs to integers
+                topRight = new Point((int) topRight.x, (int) topRight.y);
+                bottomRight = new Point((int) bottomRight.x, (int) bottomRight.y);
+                bottomLeft = new Point((int) bottomLeft.x, (int) bottomLeft.y);
+                topLeft = new Point((int) topLeft.x, (int) topLeft.y);
+
+                double deltaX = topLeft.x - topRight.x;
+                double deltaY = topLeft.y - topRight.y;
+                double distance = 0.05;
+                double margin = 0.99;
+
+                double[] dirVector = {deltaX / distance, deltaY / distance};
+
+                double deltaX1 = topLeft.x - bottomLeft.x;
+                double deltaY1 = topLeft.y - bottomLeft.y;
+
+                double[] dirVector1 = {deltaX1 / distance, deltaY1 / distance};
+
+                Point topLeftBound = new Point((int) ((dirVector[0] * 0.2075 + dirVector1[0] * 0.0125) * margin + topLeft.x),
+                        (int) ((dirVector[1] * 0.2075 + dirVector1[1] * 0.0125) * margin + topLeft.y));
+                Point topLeftAdjusted = new Point((int) (topLeft.x + dirVector1[0] * 0.0125 * margin + dirVector[0] * 0.01),
+                        (int) (topLeft.y + (dirVector[1] * 0.01 + dirVector1[1] * 0.0125) * margin));
+
+                Point bottomRightBound = new Point((int) (margin * (-1 * dirVector1[0] * 0.0875 + dirVector[0] * 0.01) + bottomLeft.x),
+                        (int) (margin * (-1 * dirVector1[1] * 0.0875 + dirVector[1] * 0.01) + bottomLeft.y));
+
+                Point bottomLeftBound = new Point((int) (margin * (-1 * dirVector1[0] * 0.15) + topLeftBound.x),
+                        (int) (margin * (-1 * dirVector1[1] * 0.15) + topLeftBound.y));
+
+                Mat mask = Mat.zeros(frame.size(), frame.type());
+                Imgproc.fillPoly(mask, new Mat[]{new Mat(new Point[]{topLeftBound, topLeftAdjusted, bottomRightBound, bottomLeftBound})}, new Scalar(255, 255, 255));
+                Core.bitwise_not(frame, frame);
+                Mat cropped = new Mat();
+                Core.bitwise_and(frame, mask, cropped);
+                Core.bitwise_not(cropped, cropped);
+
+                Point center = new Point((topLeftBound.x + topLeftAdjusted.x + bottomLeftBound.x + bottomRightBound.x) / 4,
+                        (topLeftBound.y + topLeftAdjusted.y + bottomLeftBound.y + bottomRightBound.y) / 4);
+                int[] point = {(int) (center.x - 320), (int) (center.y - 320)};
+                int[] point1 = {640, 640};
+                if (point[0] < 0) {
+                    point1[0] += Math.abs(point[0]);
+                    point[0] = 0;
+                }
+                if (point[1] < 0) {
+                    point1[1] += Math.abs(point[1]);
+                    point[1] = 0;
+                }
+                cropped = cropped.submat(new Rect(point[0], point[1], point1[0], point1[1]));
+            }
+            markerId -= 100;
+            Imgcodecs.imshow("cropped", cropped);
+            Imgcodecs.imwrite("output/" + markerId + ".jpg", cropped);
+            return cropped;
+        }
+        return null;
+    }
+
+    
 
     public static int countObjects(Mat in) {
         Mat thresh = new Mat();
