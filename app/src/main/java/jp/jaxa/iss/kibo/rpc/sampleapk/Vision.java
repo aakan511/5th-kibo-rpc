@@ -310,17 +310,12 @@ public final class Vision {
 
     }
     
-    public static Mat arucoCropModel(Mat frame) {
-        ArucoDetector detector = ArucoDetector.create();
-        Dictionary dictionary = Dictionary.get(Dictionary.DICT_5X5_250);
-        detector.setDictionary(dictionary);
-        Mat[] corners = new Mat[1];
-        Mat ids = new Mat();
-        Mat rejectedImgPoints = new Mat();
-        detector.detectMarkers(frame, corners, ids, rejectedImgPoints);
+    public static Mat arucoCropModel(Mat frame, List<Mat> corners, Mat ids) {
+        ArucoDetector detector = new ArucoDetector();
+        detector.setDictionary(getPredefinedDictionary(DICT_5X5_250);
+        detector.detectMarkers(frame, corners, ids);
 
-        if (corners.length > 0) {
-            ids = ids.flatten();
+        if (corners.size() > 0) {
             // count
             for (int i = 0; i < ids.total(); i++) {
                 int markerId = (int) ids.get(i, 0)[0];
@@ -328,10 +323,10 @@ public final class Vision {
 
                 int length = 640;
                 // Extract the marker corners
-                Point topLeft = new Point(corners[0].get(i, 0));
-                Point topRight = new Point(corners[0].get(i, 1));
-                Point bottomLeft = new Point(corners[0].get(i, 3));
-                Point bottomRight = new Point(corners[0].get(i, 2));
+                Point topLeft = new Point(corners.get(0).get(i, 0));
+                Point topRight = new Point(corners.get(0).get(i, 1));
+                Point bottomLeft = new Point(corners.get(0).get(i, 3));
+                Point bottomRight = new Point(corners.get(0).get(i, 2));
 
                 // Convert the (x,y) coordinate pairs to integers
                 topRight = new Point((int) topRight.x, (int) topRight.y);
@@ -364,10 +359,10 @@ public final class Vision {
 
                 Mat mask = Mat.zeros(frame.size(), frame.type());
                 Imgproc.fillPoly(mask, new Mat[]{new Mat(new Point[]{topLeftBound, topLeftAdjusted, bottomRightBound, bottomLeftBound})}, new Scalar(255, 255, 255));
-                Core.bitwise_not(frame, frame);
+                bitwise_not(frame, frame);
                 Mat cropped = new Mat();
                 Core.bitwise_and(frame, mask, cropped);
-                Core.bitwise_not(cropped, cropped);
+                bitwise_not(cropped, cropped);
 
                 Point center = new Point((topLeftBound.x + topLeftAdjusted.x + bottomLeftBound.x + bottomRightBound.x) / 4,
                         (topLeftBound.y + topLeftAdjusted.y + bottomLeftBound.y + bottomRightBound.y) / 4);
@@ -382,14 +377,16 @@ public final class Vision {
                     point[1] = 0;
                 }
                 cropped = cropped.submat(new Rect(point[0], point[1], point1[0], point1[1]));
+                cropped = cropped[point[1]: point[1] + ]
+                markerId -= 100;
+                Imgproc.imshow("cropped", cropped);
+                Imgproc.imwrite("output/" + markerId + ".jpg", cropped);
+                return cropped;
             }
-            markerId -= 100;
-            Imgcodecs.imshow("cropped", cropped);
-            Imgcodecs.imwrite("output/" + markerId + ".jpg", cropped);
-            return cropped;
+
         }
         return null;
-    }
+    }   
 
     
 
