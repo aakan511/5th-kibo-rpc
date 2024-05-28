@@ -122,6 +122,43 @@ public final class Vision {
 
     }
 
+    public Vision(KiboRpcApi api) {
+        OpenCVLoader.initLocal();
+        this.api = api;
+
+        double[][] rearCamIntrinsics = api.getDockCamIntrinsics(); //gets camera distortion
+        rearCamMat = new Mat().zeros(3, 3, CvType.CV_64FC(1));//intrinsic camera matrix initializer
+        rearDistortionCoefficients = new Mat().zeros(4, 1, CvType.CV_64FC(1)); //distortion coefficient initializer
+        for(int r=0; r<3; r++){ //fills intrinsic camera matrix with correct values
+            for(int c=0; c<3; c++) {
+                rearCamMat.put(r, c, (rearCamIntrinsics[0][3*r+c]));
+//                Log.i(TAG, "camMat[" + r +", " + c + "] = " + rearCamMat.get(r, c));
+//                Log.i(TAG, "navCamIntrinsics[" + (3*r+c) + "] = " + rearCamIntrinsics[0][3*r+c]);
+            }
+        }
+        for(int i=0; i<rearCamIntrinsics[1].length-1; i++){ //fills distorition coefficient array with values
+            rearDistortionCoefficients.put(i, 0, (rearCamIntrinsics[1][i]));
+//            Log.i(TAG, "distortionCoefficients[" + i + "] = " + rearDistortionCoefficients.get(0,1));
+//            Log.i(TAG, "navCamIntrinsics[" + i + "] = " + navCamIntrinsics[1][i]);
+        }
+
+        double[][] navCamIntrinsics = api.getNavCamIntrinsics(); //gets camera distortion
+        camMat = new Mat().zeros(3, 3, CvType.CV_64FC(1));//intrinsic camera matrix initializer
+        distortionCoefficients = new Mat().zeros(4, 1, CvType.CV_64FC(1)); //distortion coefficient initializer
+        for(int r=0; r<3; r++){ //fills intrinsic camera matrix with correct values
+            for(int c=0; c<3; c++) {
+                camMat.put(r, c, (navCamIntrinsics[0][3*r+c]));
+                Log.i(TAG, "camMat[" + r +", " + c + "] = " + camMat.get(r, c));
+                Log.i(TAG, "navCamIntrinsics[" + (3*r+c) + "] = " + navCamIntrinsics[0][3*r+c]);
+            }
+        }
+        for(int i=0; i<navCamIntrinsics[1].length-1; i++){ //fills distorition coefficient array with values
+            distortionCoefficients.put(i, 0, (navCamIntrinsics[1][i]));
+            Log.i(TAG, "distortionCoefficients[" + i + "] = " + distortionCoefficients.get(0,1));
+            Log.i(TAG, "navCamIntrinsics[" + i + "] = " + navCamIntrinsics[1][i]);
+        }
+    }
+
 
     public static Mat undistort(Mat src){
         Mat dst = new Mat();
@@ -246,20 +283,19 @@ public final class Vision {
                     categoryNum = 0;
                 }
                 String category = (ids.get(i, 0)[0] == 100) ? "blank" : categories[categoryNum];
-                int numObjects = (ids.get(i, 0)[0] == 100) ? 1 : countObjects(clean, categoryNum);
+                int numObjects = (ids.get(i, 0)[0] == 100) ? 1 : countObjects(clean);
 
                 if (allowReport && (int) ids.get(i, 0)[0] - 100 == currTarget) {
                     targetCategories[currTarget - 1] = category;
                     targetDescriptors[currTarget - 1] = descriptor;
 
-                    api.setAreaInfo((int) ids.get(i, 0)[0] - 100, category, numObjects);
+//                    api.setAreaInfo((int) ids.get(i, 0)[0] - 100, category, numObjects);
                     allowReport = false;
                     currTarget++;
                 }
 
                 if (ids.get(i, 0)[0] == 100) {
                     int target = findTarget(descriptor);
-                    //Movement.goToTarget(5, target); //really ugly... should be refactored eventually
                     Log.i("FinalLocation", "Final target : " + target);
                     currTarget = target;
                     return new String[]{"" + target};
@@ -314,44 +350,6 @@ public final class Vision {
 
     }
 
-    public static Mat arucoCrop(Mat in, Mat corner, double scale) {
-        Log.i("arucoCrop", "width: " + corner.size().width + ", height: " + corner.height());
-
-        double[] topLeft =  corner.get(0, 0);
-        double[] topRight = corner.get(0, 1);
-        double[] bottomLeft = corner.get(0, 3);
-
-        double[] deltaHorizontal = {topLeft[0] - topRight[0], topLeft[1] - topRight[1]};
-        double[] deltaVertical = {topLeft[0] - bottomLeft[0], topLeft[1] - bottomLeft[1]};
-        double distance = .05;
-
-        double[] dirHorizontal = {deltaHorizontal[0] / distance, deltaHorizontal[1] / distance};
-        double[] dirVertical = {deltaVertical[0] / distance, deltaVertical[1] / distance};
-
-        Point topLeftBound = new Point( scale * (dirHorizontal[0] * .2075 + dirVertical[0] * .0125) + topLeft[0],
-                scale * (dirHorizontal[1] * .2075 + dirVertical[1] * .0125) + topLeft[1]);
-        Point topRightBound = new Point(scale * (dirHorizontal[0] * .01 + dirVertical[0] * .0125) + topLeft[0],
-                scale * (dirHorizontal[1] * .01 + dirVertical[1] * .0125) + topLeft[1]);
-        Point bottomRightBound = new Point(scale * (-1 * dirVertical[0] * .0875 + dirHorizontal[0] * .01) + bottomLeft[0],
-                scale * (-1 * dirVertical[1] * .0875 + dirHorizontal[1] * .01) + bottomLeft[1]);
-        Point bottomLeftBound = new Point(scale * (-1 * dirVertical[0] * .15) + topLeftBound.x,
-                scale * (-1 * dirVertical[1] * .15) + topLeftBound.y);
-        List<MatOfPoint> points = new ArrayList<>();
-        points.add(new MatOfPoint(topLeftBound, topRightBound, bottomRightBound, bottomLeftBound));
-
-        Mat mask = Mat.zeros(in.size(), in.type());
-        Imgproc.fillPoly(mask, points, new Scalar(255));
-//        api.saveMatImage(mask, "mask.png");
-
-        Mat invert = new Mat();
-        Core.bitwise_not(in, invert);
-        Mat cropped = new Mat();
-        Core.bitwise_and(invert, mask, cropped);
-        Core.bitwise_not(cropped, cropped);
-        return cropped;
-
-    }
-
     public static int countObjects(Mat in) {
         Mat thresh = new Mat();
         Imgproc.threshold(in, thresh, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
@@ -363,44 +361,6 @@ public final class Vision {
         Imgproc.findContours(thresh, contours, heirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
         return contours.size();
 
-    }
-
-    public static int countObjects(Mat in, int category) {
-        Mat thresh = new Mat();
-        Imgproc.threshold(in, thresh, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
-        bitwise_not(thresh, thresh);
-//        api.saveMatImage(thresh, "invertedThresh_" + currTarget + ".png");
-
-        List<MatOfPoint> contours = new ArrayList<>();
-        Mat heirarchy = new Mat();
-        Imgproc.findContours(thresh, contours, heirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-
-//        int cnt = 0;
-//
-//        for (MatOfPoint contourRaw : contours) {
-//            MatOfPoint2f contour = new MatOfPoint2f();
-//            contourRaw.convertTo(contour, CvType.CV_32F);
-//            float[] radius = new float[1];
-//            Point center = new Point();
-//            Imgproc.minEnclosingCircle(contour, center, radius);
-//
-//            double ratio = Imgproc.contourArea(contour) / (Math.PI * radius[0] * radius[0]);//Imgproc.arcLength(contour, true) / (Math.PI * 2 * radius[0]);
-//            Log.i("new countobjects", "ratio : " + ratio);
-//
-//            double percentDiff = (ratio - ratios[category]) / ratios[category];
-//            Log.i("new countobjects", "percent difference : " + percentDiff);
-//
-//            if (Math.abs(percentDiff) > .1) {
-//                cnt += 2;
-//            } else {
-//                cnt += 1;
-//            }
-//
-//        }
-//
-//        return cnt;
-        return contours.size();
     }
 
     public static gov.nasa.arc.astrobee.types.Point arucoOffset(Mat img, int target) {

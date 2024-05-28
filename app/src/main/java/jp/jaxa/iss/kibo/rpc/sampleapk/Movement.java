@@ -16,8 +16,8 @@ public final class Movement {
 
     //Path for going to target
     public static Path[] scanningPaths = {
-            new Path(new Quaternion(0f, 0f, -.707f, .707f), new Point(10.95d, -9.78d, 5.195d)), // dist reduced to .80
-            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.925d, -9.2d, 5.19d), new Point(10.925, -8.875, 4.56)), //used to be z = 4.5
+            new Path(new Quaternion(0f, 0f, -.707f, .707f), new Point(10.95d, -9.2d, 5.195d)  ), // new Point(10.95d, -9.78d, 5.195d)
+            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.925, -8.875, 4.56)), //used to be z = 4.5    new Point(10.925d, -9.2d, 5.19d)
             new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.925d, -7.99, 4.56)), //y=-7.925
             new Path(new Quaternion(0f, 1f, 0f, 0f), new Point(10.7, -7.8, 4.8), new Point(10.67, -6.8525, 4.8)), //dist reduced to .8
             new Path(new Quaternion(0f, 0f, 0.707f, 0.707f), new Point(11.143, -6.7607, 4.9654))};

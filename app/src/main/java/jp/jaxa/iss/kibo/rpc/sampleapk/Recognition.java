@@ -6,6 +6,7 @@ import android.util.Log;
 import com.google.common.io.ByteStreams;
 
 import org.opencv.android.Utils;
+import org.opencv.aruco.Aruco;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -20,6 +21,7 @@ import org.opencv.core.Size;
 import org.opencv.dnn.Net;
 import org.opencv.dnn.Dnn;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.ArucoDetector;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -29,44 +31,35 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.opencv.core.Core.transpose;
+import jp.jaxa.iss.kibo.rpc.api.KiboRpcApi;
+
 import static org.opencv.dnn.Dnn.blobFromImage;
-import static org.opencv.dnn.Dnn.readNetFromONNX;
+import static org.opencv.objdetect.Objdetect.DICT_5X5_250;
+import static org.opencv.objdetect.Objdetect.getPredefinedDictionary;
 
 public class Recognition {
     public String[] classNames;
     public Net model;
     public Context context;
+    public KiboRpcApi api;
+    public String[] targets = new String[4];
+    public ArucoDetector arucoDetector = new ArucoDetector(getPredefinedDictionary(DICT_5X5_250));
+    public int finalTarget;
 
-    public Recognition(Context c, int id, String[] names) {
+    public Recognition(Context c, int id, String[] names, KiboRpcApi api) {
         Log.i("RecognitionDebug", "Recognition constructor began");
         classNames = names;
         context = c;
         loadModel(id);
+        this.api = api;
+        finalTarget = 1;
+
     }
 
     public void loadModel(int id) {
         try {
-            //MatOfByte modelBuffer = loadFileFromResource(id);
-
-//            Mat net = Utils.loadResource(context, id);
-
-//            InputStream is = context.getResources().openRawResource(id);
-//            File modelDir = context.getDir("model", Context.MODE_PRIVATE);
-//            File mModelFile = new File(modelDir, "model.onnx");
-//
-//            FileOutputStream os = new FileOutputStream(mModelFile);
-//            byte[] buffer = new byte[4096];
-//            int bytesRead;
-//            while ((bytesRead = is.read(buffer)) != -1) {
-//                os.write(buffer, 0, bytesRead);
-//            }
-//
-//            is.close();
-//            os.close();
-//
-//            model = Dnn.readNetFromONNX(mModelFile.getAbsolutePath());
             String mModelFile = Utils.exportResource(context, id);
+            //MatOfByte buffer = loadFileFromResource(id);
             model = Dnn.readNetFromONNX(mModelFile);
             Log.i("Recognition", "model loaded successfully");
         } catch (Exception e) {
@@ -77,26 +70,28 @@ public class Recognition {
 
 
     public MatOfByte loadFileFromResource(int id) {
-        byte[] buffer;
+//        byte[] buffer;
         try {
-            // load cascade file from application resources
-            InputStream is = context.getResources().openRawResource(id);
-            Log.i("RecognitionDebug", "input stream acquired");
-//            int size = is.available();
-//            buffer = new byte[size];
-//            int bytesRead = is.read(buffer);
-            buffer = ByteStreams.toByteArray(is);
-            Log.i("RecognitionDebug", "length of buffer :" + buffer.length);
-            is.close();
+//            // load cascade file from application resources
+//            InputStream is = context.getResources().openRawResource(id);
+//            Log.i("RecognitionDebug", "input stream acquired");
+////            int size = is.available();
+////            buffer = new byte[size];
+////            int bytesRead = is.read(buffer);
+//            buffer = ByteStreams.toByteArray(is);
+//            Log.i("RecognitionDebug", "length of buffer :" + buffer.length);
+//            is.close();
+            Mat modelMat = Utils.loadResource(context, id);
+            return  (MatOfByte.fromNativeAddr(modelMat.getNativeObjAddr())); //((MatOfByte) (modelMat));
         } catch (IOException e) {
             //e.printStackTrace();
             Log.e("ERROR", "Failed to load ONNX model from resources! Exception thrown: " + e);
             return null;
         }
-        return new MatOfByte(buffer);
+        //return new MatOfByte(buffer);
     }
 
-    public Mat findTarget(Mat img) {
+    public RecognitionResult findTarget(Mat img, int id) {
         if (model == null) {
             Log.i("ERROR", "tried to call findTarget without loading model first");
             return null;
@@ -135,9 +130,8 @@ public class Recognition {
             double[] w = mask.col(i).get(2, 0);
             double[] h = mask.col(i).get(3, 0);
 
-//            rect2d[i] = new Rect2d((x[0] - w[0]/2) * IN_WIDTH, (y[0] - h[0]/2) * IN_HEIGHT, w[0] * IN_WIDTH, h[0] * IN_HEIGHT);
             rect2d[i] = new Rect2d((x[0] - w[0]/2) * xScale, (y[0] - h[0]/2) * yScale, w[0] * xScale, h[0] * yScale);
-            Mat score = mask.col(i).submat(4, outputs.size(1) - 1, 0, 1);
+            Mat score = mask.col(i).submat(4, outputs.size(1), 0, 1); // outputs.size(1) - 1
             Core.MinMaxLocResult mmr = Core.minMaxLoc(score);
             scoref[i] = (float) mmr.maxVal;
             classid[i] = (int) mmr.maxLoc.y;
@@ -146,13 +140,13 @@ public class Recognition {
         MatOfFloat scores = new MatOfFloat(scoref);
         MatOfInt indeces = new MatOfInt();
 
-        Dnn.NMSBoxes(bboxes, scores, .2f, 0.88f, indeces);
+        Dnn.NMSBoxes(bboxes, scores, .2f, 0.6f, indeces);
         Log.i("RecognitionDebug", "indeces total : " + indeces.total());
         List<Integer> result = indeces.total() > 0 ? indeces.toList() : new ArrayList<Integer>();
 
         int category = 0;
         float maxConfidence = 0.0f;
-        int cnt = 0;
+        int cnt = result.size();
         for (Integer integer : result) {
             imgRGB = drawBoundingBox(imgRGB, classid[integer], scoref[integer], rect2d[integer]);
 
@@ -160,12 +154,10 @@ public class Recognition {
                 category = classid[integer];
                 maxConfidence = scoref[integer];
             }
-            if (classid[integer] != 5) {
-                cnt++;
-            }
         }
         Log.i("YOLOResults", "category : " + classNames[category] + ", count : " + cnt);
-        return imgRGB;
+        api.saveMatImage(imgRGB, "recognitionTesting" + id + ".jpg");
+        return new RecognitionResult(imgRGB, cnt, classNames[category]);
     }
 
     public Mat drawBoundingBox(Mat in, int classId, double confidence, int x, int y, int x1, int y1) {
@@ -183,4 +175,48 @@ public class Recognition {
         return drawBoundingBox(in, classId, confidence, (int) rect.x, (int) rect.y, (int) (rect.x + rect.width), (int)(rect.y + rect.height));
     }
 
+    public void identify (Mat in){
+        List<Mat> corners = new ArrayList<>();
+        Mat ids = new Mat();
+
+        arucoDetector.detectMarkers(in, corners, ids);
+
+        for (int i = 0; i < corners.size(); i++) {
+            int currTarget = (int) ids.get(i, 0)[0] - 100;
+            Mat clean = new Mat();
+            in.copyTo(clean);
+            clean = Vision.arucoCrop(clean, corners.get(i));
+            api.saveMatImage(clean, "target_" + ((int) (ids.get(i, 0)[0] - 100)) + "_" + Vision.randName() + "_cropped.png");
+            RecognitionResult result = findTarget(clean, currTarget);
+            Log.i ("DebuggingTarg4 glitch", "targets[currTarget - 1] : " + currTarget + ", " + finalTarget + ", " + (currTarget == finalTarget));
+            if (currTarget != 0 && currTarget == finalTarget) {
+                api.setAreaInfo(currTarget, result.category, result.numObjects);
+                targets[currTarget - 1] = result.category;
+                finalTarget++;
+            } else {
+                api.reportRoundingCompletion();
+                for (int j = 0; j < targets.length; j++) {
+                    if (targets[j].equals(result.category)) {
+                        finalTarget = j + 1;
+                        return;
+                    }
+                }
+            }
+
+
+        }
+    }
+
+}
+
+class RecognitionResult {
+    Mat img;
+    int numObjects;
+    String category;
+
+    public RecognitionResult (Mat in, int num, String c) {
+        img = in;
+        numObjects = num;
+        category = c;
+    }
 }

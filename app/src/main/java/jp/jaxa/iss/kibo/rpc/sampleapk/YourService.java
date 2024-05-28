@@ -33,41 +33,26 @@ public class YourService extends KiboRpcService {
         // Start Mission
         api.startMission();
         Movement.api = api;
-        Vision v = new Vision(api, getApplicationContext());
+        Vision v = new Vision(api);
 
-        Recognition r = new Recognition(getApplicationContext(), R.raw.apollo, new String[]{"kapton_tape", "beaker", "dropper", "goggle", "hammer", "objects", "screwdriver", "thermometer",
-                "top", "watch", "wrench"});
+        Recognition r = new Recognition(getApplicationContext(), R.raw.apollo, new String[]{"beaker", "pipette", "goggle", "hammer", "kapton_tape", "screwdriver", "thermometer",
+                "top", "watch", "wrench"}, api);
+
         // Target 1
         goToTarget(0, 1);
         takeSnapshot(api, r);
 
-        //Mat img = Vision.undistort(api.getMatNavCam());
-
-//        List<Mat> corners = new ArrayList<>();
-//        Mat ids = new Mat();
-//
-//        ArucoDetector arucoDetector = new ArucoDetector(getPredefinedDictionary(DICT_5X5_250));
-//        arucoDetector.detectMarkers(img, corners, ids);
-//
-//        if (corners.size() > 0) {
-//            img = Vision.arucoCrop(img, corners.get(0));
-//        }
-//        img = r.findTarget(img);
-//        api.saveMatImage(img, "recognitionTesting" + Vision.currTarget + ".jpg");
-
-//
 //        if (api.getRobotKinematics().getPosition().getX() <= 10.88) {
 //            moveAstrobee( new Point(10.9d, -9.6d, 5.19d), api.getRobotKinematics().getOrientation(), 'A', false, "readjusting");
 //            Log.i("Target1", "had to readjust");
 //        }
-//
         // Target 2
         goToTarget(1, 2);
         takeSnapshot(api, r);
-        if (api.getRobotKinematics().getPosition().getX() <= 10.7) {
-            moveAstrobee(Movement.scanningPaths[1].points[Movement.scanningPaths[1].points.length - 1], Movement.scanningPaths[1].orientation, 'A', false, "readjusting");
-            Log.i("Target2", "had to readjust");
-        }
+//        if (api.getRobotKinematics().getPosition().getX() <= 10.7) {
+//            moveAstrobee(Movement.scanningPaths[1].points[Movement.scanningPaths[1].points.length - 1], Movement.scanningPaths[1].orientation, 'A', false, "readjusting");
+//            Log.i("Target2", "had to readjust");
+//        }
 
 
         // Target 3
@@ -87,16 +72,18 @@ public class YourService extends KiboRpcService {
         api.flashlightControlFront(.01f);
         Mat image = api.getMatNavCam();
         image = Vision.undistort(image);
-        Vision.findAruco(image);
+//        Vision.findAruco(image);
 //        api.saveMatImage(image, "front5.jpg");
+        r.identify(image);
 
         // Target item
 //        Vision.currTarget = 1; // use this to test return paths
-        goToTarget(5, Vision.currTarget);
+        goToTarget(5, r.finalTarget);
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
-        Point adjustment = Vision.arucoOffset(image, Vision.currTarget);
+//        Point adjustment = Vision.arucoOffset(image, r.finalTarget);
+        Point adjustment = Vision.arucoOffsetDebug(image, r.finalTarget);
         Log.i("adjustment", "(" + adjustment.getX() + ", " + adjustment.getY() + ", " + adjustment.getZ() + ")");
         Point currPos = api.getRobotKinematics().getPosition();
         Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
@@ -108,7 +95,7 @@ public class YourService extends KiboRpcService {
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
         image = Vision.undistort(image);
-//        api.saveMatImage(image, "front7.jpg");
+        api.saveMatImage(image, "front7_" + Vision.randName() + "_.jpg");
 
         api.takeTargetItemSnapshot();
     }
@@ -127,33 +114,23 @@ public class YourService extends KiboRpcService {
         //api.flashlightControlFront(.01f);
         Mat image = api.getMatNavCam();
         int target = Vision.currTarget;
-        Point adj = Vision.arucoOffsetDebug(image, target);
-        double distance = Vision.distance(adj);
-        Log.i("distanceReports", "target " + target + " distance : " + distance);
-        Log.i("distanceReportsPoint", "(" + adj.getX() + ", " + adj.getY() + ", " + adj.getZ() + ")");
-        if (distance > .30) {
-            Point currPos1 = api.getRobotKinematics().getPosition();
-            Point absPos = new Point(currPos1.getX() + adj.getX(), currPos1.getY() + adj.getY(), currPos1.getZ() + adj.getZ());
-            moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "TESTINKH");
-            api.saveMatImage(image, "bFront" + target + "_" + Vision.randName() + "OG.jpg");
-            image = api.getMatNavCam();
-        }
+//        Point adj = Vision.arucoOffsetDebug(image, target);
+//        double distance = Vision.distance(adj);
+//        Log.i("distanceReports", "target " + target + " distance : " + distance);
+//        Log.i("distanceReportsPoint", "(" + adj.getX() + ", " + adj.getY() + ", " + adj.getZ() + ")");
+//        if (distance > .30) {
+//            Point currPos1 = api.getRobotKinematics().getPosition();
+//            Point absPos = new Point(currPos1.getX() + adj.getX(), currPos1.getY() + adj.getY(), currPos1.getZ() + adj.getZ());
+//            moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "TESTINKH");
+//            api.saveMatImage(image, "bFront" + target + "_" + Vision.randName() + "OG.jpg");
+//            image = api.getMatNavCam();
+//        }
+
         image = Vision.undistort(image);
-        Vision.findAruco(image);
         api.saveMatImage(image, "front" + target + "_" + Vision.randName() + ".jpg");
 
+        r.identify(image);
 
-        Mat img = Vision.undistort(api.getMatNavCam());
-        List<Mat> corners = new ArrayList<>();
-        Mat ids = new Mat();
-
-        ArucoDetector arucoDetector = new ArucoDetector(getPredefinedDictionary(DICT_5X5_250));
-        arucoDetector.detectMarkers(img, corners, ids);
-
-        if (corners.size() > 0) {
-            img = Vision.arucoCrop(img, corners.get(0));
-        }
-        img = r.findTarget(img);
-        api.saveMatImage(img, "recognitionTesting" + Vision.currTarget + ".jpg");
+        Vision.currTarget++;
     }
 }
