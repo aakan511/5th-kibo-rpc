@@ -52,7 +52,7 @@ public class Recognition {
         context = c;
         loadModel(id);
         this.api = api;
-        finalTarget = 1;
+        finalTarget = 4;
 
     }
 
@@ -188,15 +188,14 @@ public class Recognition {
             clean = Vision.arucoCrop(clean, corners.get(i));
             api.saveMatImage(clean, "target_" + ((int) (ids.get(i, 0)[0] - 100)) + "_" + Vision.randName() + "_cropped.png");
             RecognitionResult result = findTarget(clean, currTarget);
-            Log.i ("DebuggingTarg4 glitch", "targets[currTarget - 1] : " + currTarget + ", " + finalTarget + ", " + (currTarget == finalTarget));
-            if (currTarget != 0 && currTarget == finalTarget) {
+            //Log.i ("DebuggingTarg4 glitch", "targets[currTarget - 1] : " + currTarget + ", " + finalTarget + ", " + (currTarget == finalTarget));
+            if (currTarget != 0 && targets[currTarget - 1] == null) {
                 api.setAreaInfo(currTarget, result.category, result.numObjects);
                 targets[currTarget - 1] = result.category;
-                finalTarget++;
-            } else {
+            } else if (currTarget == 0){
                 api.reportRoundingCompletion();
                 for (int j = 0; j < targets.length; j++) {
-                    if (targets[j].equals(result.category)) {
+                    if (result.category.equals(targets[j])) {
                         finalTarget = j + 1;
                         return;
                     }

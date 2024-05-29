@@ -42,22 +42,24 @@ public class YourService extends KiboRpcService {
         goToTarget(0, 1);
         takeSnapshot(api, r);
 
-//        if (api.getRobotKinematics().getPosition().getX() <= 10.88) {
-//            moveAstrobee( new Point(10.9d, -9.6d, 5.19d), api.getRobotKinematics().getOrientation(), 'A', false, "readjusting");
-//            Log.i("Target1", "had to readjust");
-//        }
+        if (r.targets[0] == null) {
+            Point og = Movement.scanningPaths[0].points[0];
+            Point adj = new Point(og.getX(), og.getY() - .2, og.getZ());
+            Log.i("Target1", "had to readjust");
+            moveAstrobee(adj, Movement.scanningPaths[0].orientation, 'A', false, "readjusting");
+
+            Mat image = Vision.undistort(api.getMatNavCam());
+            r.identify(image);
+            api.saveMatImage(image, "front1_adjusted_" + Vision.randName() + "_.jpg");
+        }
+
         // Target 2
         goToTarget(1, 2);
         takeSnapshot(api, r);
-//        if (api.getRobotKinematics().getPosition().getX() <= 10.7) {
-//            moveAstrobee(Movement.scanningPaths[1].points[Movement.scanningPaths[1].points.length - 1], Movement.scanningPaths[1].orientation, 'A', false, "readjusting");
-//            Log.i("Target2", "had to readjust");
-//        }
-
 
         // Target 3
-        goToTarget(2, 3);
-        takeSnapshot(api, r);
+//        goToTarget(2, 3);
+//        takeSnapshot(api, r);
 
         // Target 4
         goToTarget(3, 4);
