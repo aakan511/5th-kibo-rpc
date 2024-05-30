@@ -183,24 +183,27 @@ public class Recognition {
 
         for (int i = 0; i < corners.size(); i++) {
             int currTarget = (int) ids.get(i, 0)[0] - 100;
-            Mat clean = new Mat();
-            in.copyTo(clean);
-            clean = Vision.arucoCrop(clean, corners.get(i));
-            api.saveMatImage(clean, "target_" + ((int) (ids.get(i, 0)[0] - 100)) + "_" + Vision.randName() + "_cropped.png");
-            RecognitionResult result = findTarget(clean, currTarget);
-            //Log.i ("DebuggingTarg4 glitch", "targets[currTarget - 1] : " + currTarget + ", " + finalTarget + ", " + (currTarget == finalTarget));
-            if (currTarget != 0 && targets[currTarget - 1] == null) {
-                api.setAreaInfo(currTarget, result.category, result.numObjects);
-                targets[currTarget - 1] = result.category;
-            } else if (currTarget == 0){
-                api.reportRoundingCompletion();
-                for (int j = 0; j < targets.length; j++) {
-                    if (result.category.equals(targets[j])) {
-                        finalTarget = j + 1;
-                        return;
+            if (currTarget <= 4) {
+                Mat clean = new Mat();
+                in.copyTo(clean);
+                clean = Vision.arucoCrop(clean, corners.get(i));
+                api.saveMatImage(clean, "target_" + ((int) (ids.get(i, 0)[0] - 100)) + "_" + Vision.randName() + "_cropped.png");
+                RecognitionResult result = findTarget(clean, currTarget);
+                //Log.i ("DebuggingTarg4 glitch", "targets[currTarget - 1] : " + currTarget + ", " + finalTarget + ", " + (currTarget == finalTarget));
+                if (currTarget != 0 && targets[currTarget - 1] == null) {
+                    api.setAreaInfo(currTarget, result.category, result.numObjects);
+                    targets[currTarget - 1] = result.category;
+                } else if (currTarget == 0){
+                    api.reportRoundingCompletion();
+                    for (int j = 0; j < targets.length; j++) {
+                        if (result.category.equals(targets[j])) {
+                            finalTarget = j + 1;
+                            return;
+                        }
                     }
                 }
             }
+
 
 
         }
