@@ -59,7 +59,8 @@ public class Recognition {
     public void loadModel(int id) {
         try {
             String mModelFile = Utils.exportResource(context, id);
-            //MatOfByte buffer = loadFileFromResource(id);
+//            MatOfByte buffer = loadFileFromResource(id);
+//            model = Dnn.readNetFromONNX(buffer);
             model = Dnn.readNetFromONNX(mModelFile);
             Log.i("Recognition", "model loaded successfully");
         } catch (Exception e) {
@@ -69,27 +70,27 @@ public class Recognition {
 
 
 
-    public MatOfByte loadFileFromResource(int id) {
-//        byte[] buffer;
-        try {
-//            // load cascade file from application resources
-//            InputStream is = context.getResources().openRawResource(id);
-//            Log.i("RecognitionDebug", "input stream acquired");
-////            int size = is.available();
-////            buffer = new byte[size];
-////            int bytesRead = is.read(buffer);
-//            buffer = ByteStreams.toByteArray(is);
-//            Log.i("RecognitionDebug", "length of buffer :" + buffer.length);
-//            is.close();
-            Mat modelMat = Utils.loadResource(context, id);
-            return  (MatOfByte.fromNativeAddr(modelMat.getNativeObjAddr())); //((MatOfByte) (modelMat));
-        } catch (IOException e) {
-            //e.printStackTrace();
-            Log.e("ERROR", "Failed to load ONNX model from resources! Exception thrown: " + e);
-            return null;
-        }
-        //return new MatOfByte(buffer);
-    }
+//    public MatOfByte loadFileFromResource(int id) {
+////        byte[] buffer;
+//        try {
+////            // load cascade file from application resources
+////            InputStream is = context.getResources().openRawResource(id);
+////            Log.i("RecognitionDebug", "input stream acquired");
+//////            int size = is.available();
+//////            buffer = new byte[size];
+//////            int bytesRead = is.read(buffer);
+////            buffer = ByteStreams.toByteArray(is);
+////            Log.i("RecognitionDebug", "length of buffer :" + buffer.length);
+////            is.close();
+//            Mat modelMat = Utils.loadResource(context, id);
+//            return  (MatOfByte) modelMat; //((MatOfByte) (modelMat));
+//        } catch (IOException e) {
+//            //e.printStackTrace();
+//            Log.e("ERROR", "Failed to load ONNX model from resources! Exception thrown: " + e);
+//            return null;
+//        }
+//        //return new MatOfByte(buffer);
+//    }
 
     public RecognitionResult findTarget(Mat img, int id) {
         if (model == null) {
@@ -140,7 +141,7 @@ public class Recognition {
         MatOfFloat scores = new MatOfFloat(scoref);
         MatOfInt indeces = new MatOfInt();
 
-        Dnn.NMSBoxes(bboxes, scores, .2f, 0.6f, indeces);
+        Dnn.NMSBoxes(bboxes, scores, .49999f, 0.7f, indeces); //nms = .45
         Log.i("RecognitionDebug", "indeces total : " + indeces.total());
         List<Integer> result = indeces.total() > 0 ? indeces.toList() : new ArrayList<Integer>();
 
