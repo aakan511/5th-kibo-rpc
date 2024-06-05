@@ -3,13 +3,10 @@ package jp.jaxa.iss.kibo.rpc.sampleapk;
 import android.content.Context;
 import android.util.Log;
 
-import com.google.common.io.ByteStreams;
 
 import org.opencv.android.Utils;
-import org.opencv.aruco.Aruco;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfRect2d;
@@ -23,11 +20,6 @@ import org.opencv.dnn.Dnn;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.ArucoDetector;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -1,25 +1,16 @@
 package jp.jaxa.iss.kibo.rpc.sampleapk;
 
-import android.graphics.Bitmap;
 import android.util.Log;
 
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcApi;
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcService;
 
 import gov.nasa.arc.astrobee.types.Point;
-import gov.nasa.arc.astrobee.types.Quaternion;
 
-import org.opencv.aruco.Aruco;
 import org.opencv.core.Mat;
-import org.opencv.objdetect.ArucoDetector;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static jp.jaxa.iss.kibo.rpc.sampleapk.Movement.goToTarget;
 import static jp.jaxa.iss.kibo.rpc.sampleapk.Movement.moveAstrobee;
-import static org.opencv.objdetect.Objdetect.DICT_5X5_250;
-import static org.opencv.objdetect.Objdetect.getPredefinedDictionary;
 
 /**
  * Class meant to handle commands from the Ground Data System and execute them in Astrobee.
@@ -52,10 +43,8 @@ public class YourService extends KiboRpcService {
             Log.i("Target1", "had to readjust");
             moveAstrobee(adj, Movement.scanningPaths[0].orientation, 'A', false, "readjusting");
 
-            Mat image = Vision.undistort(api.getMatNavCam());
-            r.identify(image);
-            api.saveMatImage(image, "front1_adjusted_" + Vision.randName() + "_.jpg");
-        }
+            (new ReadjustSnapshot(api, r)).start();
+         }
 
         // Target 2 & 3
         goToTarget(1, 2);
@@ -79,8 +68,8 @@ public class YourService extends KiboRpcService {
         r.identify(image);
 
         // Target item
-//        Vision.currTarget = 1; // use this to test return paths
         goToTarget(5, r.finalTarget);
+//        goToTarget(5, 1);
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
@@ -145,5 +134,19 @@ class TargetSnapshot extends Thread{
         r.identify(image);
 
         Vision.currTarget++;
+    }
+}
+
+class ReadjustSnapshot extends TargetSnapshot {
+
+    public ReadjustSnapshot(KiboRpcApi api, Recognition r) {
+        super(api, r);
+    }
+
+    @Override
+    public void run() {
+        Mat image = Vision.undistort(api.getMatNavCam());
+        r.identify(image);
+        api.saveMatImage(image, "front1_adjusted_" + Vision.randName() + "_.jpg");
     }
 }
