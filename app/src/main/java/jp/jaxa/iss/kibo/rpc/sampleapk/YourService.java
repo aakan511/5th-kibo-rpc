@@ -39,8 +39,12 @@ public class YourService extends KiboRpcService {
                 "top", "watch", "wrench"}, api);
 
         // Target 1
+        (new Thread(r)).start();
         goToTarget(0, 1);
-        takeSnapshot(api, r);
+
+
+        TargetSnapshot snap = new TargetSnapshot(api, r);
+        snap.run();
 
         if (r.targets[0] == null) {
             Point og = Movement.scanningPaths[0].points[0];
@@ -53,17 +57,13 @@ public class YourService extends KiboRpcService {
             api.saveMatImage(image, "front1_adjusted_" + Vision.randName() + "_.jpg");
         }
 
-        // Target 2
+        // Target 2 & 3
         goToTarget(1, 2);
-        takeSnapshot(api, r);
-
-        // Target 3
-//        goToTarget(2, 3);
-//        takeSnapshot(api, r);
+        snap.start();
 
         // Target 4
         goToTarget(3, 4);
-        takeSnapshot(api, r);
+        snap.start();
 
         // Astronaut
         goToTarget(4, 5);
@@ -84,12 +84,11 @@ public class YourService extends KiboRpcService {
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
-//        Point adjustment = Vision.arucoOffset(image, r.finalTarget);
         Point adjustment = Vision.arucoOffsetDebug(image, r.finalTarget);
         Log.i("adjustment", "(" + adjustment.getX() + ", " + adjustment.getY() + ", " + adjustment.getZ() + ")");
         Point currPos = api.getRobotKinematics().getPosition();
         Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
-        image = Vision.undistort(image);
+//        image = Vision.undistort(image);
 //        api.saveMatImage(image, "front6.jpg");
 
         moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "finalAdjustment");
@@ -116,17 +115,29 @@ public class YourService extends KiboRpcService {
         //api.flashlightControlFront(.01f);
         Mat image = api.getMatNavCam();
         int target = Vision.currTarget;
-//        Point adj = Vision.arucoOffsetDebug(image, target);
-//        double distance = Vision.distance(adj);
-//        Log.i("distanceReports", "target " + target + " distance : " + distance);
-//        Log.i("distanceReportsPoint", "(" + adj.getX() + ", " + adj.getY() + ", " + adj.getZ() + ")");
-//        if (distance > .30) {
-//            Point currPos1 = api.getRobotKinematics().getPosition();
-//            Point absPos = new Point(currPos1.getX() + adj.getX(), currPos1.getY() + adj.getY(), currPos1.getZ() + adj.getZ());
-//            moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "TESTINKH");
-//            api.saveMatImage(image, "bFront" + target + "_" + Vision.randName() + "OG.jpg");
-//            image = api.getMatNavCam();
-//        }
+
+        image = Vision.undistort(image);
+        api.saveMatImage(image, "front" + target + "_" + Vision.randName() + ".jpg");
+
+        r.identify(image);
+
+        Vision.currTarget++;
+    }
+}
+
+class TargetSnapshot extends Thread{
+    KiboRpcApi api;
+    Recognition r;
+
+    public TargetSnapshot (KiboRpcApi api, Recognition r) {
+        this.api = api;
+        this.r = r;
+    }
+
+    public void run() {
+        //api.flashlightControlFront(.01f);
+        Mat image = api.getMatNavCam();
+        int target = Vision.currTarget;
 
         image = Vision.undistort(image);
         api.saveMatImage(image, "front" + target + "_" + Vision.randName() + ".jpg");

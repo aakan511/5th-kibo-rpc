@@ -37,7 +37,7 @@ import static org.opencv.dnn.Dnn.blobFromImage;
 import static org.opencv.objdetect.Objdetect.DICT_5X5_250;
 import static org.opencv.objdetect.Objdetect.getPredefinedDictionary;
 
-public class Recognition {
+public class Recognition implements Runnable{
     public String[] classNames;
     public Net model;
     public Context context;
@@ -45,15 +45,20 @@ public class Recognition {
     public String[] targets = new String[4];
     public ArucoDetector arucoDetector = new ArucoDetector(getPredefinedDictionary(DICT_5X5_250));
     public int finalTarget;
+    public int id;
 
     public Recognition(Context c, int id, String[] names, KiboRpcApi api) {
         Log.i("RecognitionDebug", "Recognition constructor began");
         classNames = names;
         context = c;
-        loadModel(id);
+        this.id = id;
         this.api = api;
         finalTarget = 4;
 
+    }
+
+    public void run() {
+        loadModel(id);
     }
 
     public void loadModel(int id) {
