@@ -214,7 +214,7 @@ public final class Vision {
     public static boolean targetItemReadjust(gov.nasa.arc.astrobee.types.Point p) {
         double dist = distance(p);
         double angle = angle(p);
-        boolean result = angle >= 25 || dist >= .85;
+        boolean result = angle >= 15 || dist >= .85;
 
         Log.i("TargetItemStats", "distance : " + dist + ", angle : " + angle + ", will be readjusting : " + result);
 
