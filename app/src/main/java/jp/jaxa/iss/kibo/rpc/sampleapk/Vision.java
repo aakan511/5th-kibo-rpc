@@ -141,7 +141,7 @@ public final class Vision {
         return new gov.nasa.arc.astrobee.types.Point();
     }
 
-    public static gov.nasa.arc.astrobee.types.Point arucoOffsetCenter(Mat img, int target) {
+    public static gov.nasa.arc.astrobee.types.Point[] arucoOffsetCenter(Mat img, int target) {
         ArrayList<Mat> corners = new ArrayList<>();
         Mat ids = new Mat();
         Mat rvec = new Mat();
@@ -175,29 +175,50 @@ public final class Vision {
                 double[] centerAdj = {(.1375 * deltaHorizontal[0]) + (-.0375 * deltaVertical[0]), (.1375 * deltaHorizontal[0]) + (-.0375 * deltaVertical[0])};
 
                 double[] pt = tvec.row(i).get(0, 0);
-                pt[2] = 0;
                 pt[0] = pt[0] + centerAdj[0];
                 pt[1] = pt[1] + centerAdj[1];
+                gov.nasa.arc.astrobee.types.Point dist =  new gov.nasa.arc.astrobee.types.Point(pt[0], pt[1], pt[2]);
+
+                pt[2] = 0;
 
                 if (target == 1) {
-                    return new gov.nasa.arc.astrobee.types.Point(pt[0], -pt[2], pt[1]);
+                    return new gov.nasa.arc.astrobee.types.Point[]{new gov.nasa.arc.astrobee.types.Point(pt[0], -pt[2], pt[1]), dist};
                 } else if (target == 2 || target == 3) {
-                    return new gov.nasa.arc.astrobee.types.Point(pt[1], pt[0], -pt[2]);
+                    return new gov.nasa.arc.astrobee.types.Point[]{new gov.nasa.arc.astrobee.types.Point(pt[1], pt[0], -pt[2]), dist};
                 } else{
-                    return new gov.nasa.arc.astrobee.types.Point(-pt[2], -pt[1], -pt[0]);
+                    return new gov.nasa.arc.astrobee.types.Point[]{new gov.nasa.arc.astrobee.types.Point(-pt[2], -pt[1], -pt[0]), dist};
                 }
             }
         }
         Log.i("ERROR", currTarget + " target's aruco marker not found");
-        return new gov.nasa.arc.astrobee.types.Point();
+        return new gov.nasa.arc.astrobee.types.Point[]{new gov.nasa.arc.astrobee.types.Point()};
     }
 
-    public static double distance (gov.nasa.arc.astrobee.types.Point p) {
+
+    public static double distance(gov.nasa.arc.astrobee.types.Point p) {
         if (p == null) {
             Log.i("ERRORERROR", "point passed into distance is null");
             return 0;
+
         }
         return Math.sqrt(p.getX() * p.getX() + p.getY() * p.getY() + p.getZ() * p.getZ());
+    }
+
+    public static double angle(gov.nasa.arc.astrobee.types.Point p) {
+        double distXY = distance (new gov.nasa.arc.astrobee.types.Point(p.getX(), p.getY(), 0));
+        double angle = Math.toDegrees((Math.atan(distXY/p.getZ())));
+
+        return angle;
+    }
+
+    public static boolean targetItemReadjust(gov.nasa.arc.astrobee.types.Point p) {
+        double dist = distance(p);
+        double angle = angle(p);
+        boolean result = angle >= 25 || dist >= .85;
+
+        Log.i("TargetItemStats", "distance : " + dist + ", angle : " + angle + ", will be readjusting : " + result);
+
+        return result;
     }
 
 

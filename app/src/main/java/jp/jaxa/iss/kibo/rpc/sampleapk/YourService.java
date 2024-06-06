@@ -74,16 +74,18 @@ public class YourService extends KiboRpcService {
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
-        Point adjustment = Vision.arucoOffsetCenter(image, r.finalTarget);
-        Log.i("adjustment", "(" + adjustment.getX() + ", " + adjustment.getY() + ", " + adjustment.getZ() + ")");
-        Point currPos = api.getRobotKinematics().getPosition();
-        Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
+        Point[] distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
+        if (Vision.targetItemReadjust(distanceTargetItem[1])) {
+            Point adjustment = distanceTargetItem[0];
+            Log.i("adjustment", "(" + adjustment.getX() + ", " + adjustment.getY() + ", " + adjustment.getZ() + ")");
+            Point currPos = api.getRobotKinematics().getPosition();
+            Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
 //        image = Vision.undistort(image);
 //        api.saveMatImage(image, "front6.jpg");
+            moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "finalAdjustment");
+        }
 
-        moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "finalAdjustment");
-
-        api.flashlightControlFront(.01f);
+//        api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
         image = Vision.undistort(image);
         api.saveMatImage(image, "front7_" + Vision.randName() + "_.jpg");
@@ -101,18 +103,18 @@ public class YourService extends KiboRpcService {
         // write your plan 3 here.
     }
 
-    public static void takeSnapshot(KiboRpcApi api, Recognition r) {
-        //api.flashlightControlFront(.01f);
-        Mat image = api.getMatNavCam();
-        int target = Vision.currTarget;
-
-        image = Vision.undistort(image);
-        api.saveMatImage(image, "front" + target + "_" + Vision.randName() + ".jpg");
-
-        r.identify(image);
-
-        Vision.currTarget++;
-    }
+//    public static void takeSnapshot(KiboRpcApi api, Recognition r) {
+//        //api.flashlightControlFront(.01f);
+//        Mat image = api.getMatNavCam();
+//        int target = Vision.currTarget;
+//
+//        image = Vision.undistort(image);
+//        api.saveMatImage(image, "front" + target + "_" + Vision.randName() + ".jpg");
+//
+//        r.identify(image);
+//
+//        Vision.currTarget++;
+//    }
 }
 
 class TargetSnapshot extends Thread{
