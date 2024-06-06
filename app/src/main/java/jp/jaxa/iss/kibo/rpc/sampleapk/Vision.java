@@ -133,7 +133,7 @@ public final class Vision {
                 } else if (target == 2 || target == 3) {
                     return new gov.nasa.arc.astrobee.types.Point(pt[1], pt[0], -pt[2]);
                 } else if (target == 4) {
-                    return new gov.nasa.arc.astrobee.types.Point(-pt[2], pt[0], -pt[1]);
+                    return new gov.nasa.arc.astrobee.types.Point(-pt[2], -pt[0], -pt[1]);
                 }
             }
         }
@@ -141,7 +141,7 @@ public final class Vision {
         return new gov.nasa.arc.astrobee.types.Point();
     }
 
-    public static gov.nasa.arc.astrobee.types.Point arucoOffsetDebug(Mat img, int target) {
+    public static gov.nasa.arc.astrobee.types.Point arucoOffsetCenter(Mat img, int target) {
         ArrayList<Mat> corners = new ArrayList<>();
         Mat ids = new Mat();
         Mat rvec = new Mat();
@@ -184,7 +184,7 @@ public final class Vision {
                 } else if (target == 2 || target == 3) {
                     return new gov.nasa.arc.astrobee.types.Point(pt[1], pt[0], -pt[2]);
                 } else{
-                    return new gov.nasa.arc.astrobee.types.Point(-pt[2], pt[0], -pt[1]);
+                    return new gov.nasa.arc.astrobee.types.Point(-pt[2], -pt[1], -pt[0]);
                 }
             }
         }
