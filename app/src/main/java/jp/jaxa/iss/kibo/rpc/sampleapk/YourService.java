@@ -58,31 +58,31 @@ public class YourService extends KiboRpcService {
         r.identify(image);
 
         // Target item
-//        r.finalTarget = 4;
+        r.finalTarget = 2;
         goToTarget(5, r.finalTarget);
 //        goToTarget(5, 4);
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
         Point[] distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
-        if (Vision.targetItemReadjust(distanceTargetItem[1])) {
-            Point adjustment = distanceTargetItem[0];
-            Log.i("adjustment", "(" + adjustment.getX() + ", " + adjustment.getY() + ", " + adjustment.getZ() + ")");
-            Point currPos = api.getRobotKinematics().getPosition();
-            Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
+//        if (Vision.targetItemReadjust(distanceTargetItem[1])) {
+//            Point adjustment = distanceTargetItem[0];
+//            Log.i("adjustment", "(" + adjustment.getX() + ", " + adjustment.getY() + ", " + adjustment.getZ() + ")");
+//            Point currPos = api.getRobotKinematics().getPosition();
+//            Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
+////        image = Vision.undistort(image);
+////        api.saveMatImage(image, "front6.jpg");
+//            moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "finalAdjustment");
+//        }
+//
+////        api.flashlightControlFront(.01f);
+//        image = api.getMatNavCam();
+//
+//        //FOR DEBUG ONLY REMOVE LATER
+//        distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
+//        Vision.targetItemReadjust(distanceTargetItem[1]);
+//
 //        image = Vision.undistort(image);
-//        api.saveMatImage(image, "front6.jpg");
-            moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "finalAdjustment");
-        }
-
-//        api.flashlightControlFront(.01f);
-        image = api.getMatNavCam();
-
-        //FOR DEBUG ONLY REMOVE LATER
-        distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
-        Vision.targetItemReadjust(distanceTargetItem[1]);
-
-        image = Vision.undistort(image);
         api.saveMatImage(image, "front7_" + Vision.randName() + "_.jpg");
 
         api.takeTargetItemSnapshot();
