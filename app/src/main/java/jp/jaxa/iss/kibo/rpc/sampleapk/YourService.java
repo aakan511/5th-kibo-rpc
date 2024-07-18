@@ -29,22 +29,12 @@ public class YourService extends KiboRpcService {
         Recognition r = new Recognition(getApplicationContext(), R.raw.falcon, new String[]{"beaker", "pipette", "goggle", "hammer", "kapton_tape", "screwdriver", "thermometer",
                 "top", "watch", "wrench"}, api);
 
-        // Target 1
         (new Thread(r)).start();
-        goToTarget(0, 1);
-
-
         TargetSnapshot snap = new TargetSnapshot(api, r);
-        snap.run();
 
-        if (r.targets[0] == null) {
-            Point og = Movement.scanningPaths[0].points[0];
-            Point adj = new Point(og.getX(), og.getY() - .2, og.getZ());
-            Log.i("Target1", "had to readjust");
-            moveAstrobee(adj, Movement.scanningPaths[0].orientation, 'A', false, "readjusting");
-
-            (new ReadjustSnapshot(api, r)).start();
-         }
+        // Target 1
+        goToTarget(0, 1);
+        snap.start();
 
         // Target 2 & 3
         goToTarget(1, 2);
@@ -87,6 +77,11 @@ public class YourService extends KiboRpcService {
 
 //        api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
+
+        //FOR DEBUG ONLY REMOVE LATER
+        distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
+        Vision.targetItemReadjust(distanceTargetItem[1]);
+
         image = Vision.undistort(image);
         api.saveMatImage(image, "front7_" + Vision.randName() + "_.jpg");
 

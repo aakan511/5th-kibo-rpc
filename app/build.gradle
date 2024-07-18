@@ -56,6 +56,11 @@ dependencies {
     testCompile 'junit:junit:4.12'
     implementation files('libs/opencv-4.9.0.aar')
 
+
+    //implementation 'androidx.appcompat:appcompat:1.1.0'
+//    implementation 'org.pytorch:pytorch_android_lite:2.1.0'
+//    implementation 'org.pytorch:pytorch_android_torchvision_lite:2.1.0'
+
 //    implementation("com.google.guava:guava:24.0-android")
 
 }

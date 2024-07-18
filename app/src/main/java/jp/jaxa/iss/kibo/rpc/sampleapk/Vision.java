@@ -10,6 +10,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.ArucoDetector;
@@ -21,6 +22,7 @@ import java.util.List;
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcApi;
 
 import static android.content.ContentValues.TAG;
+import static org.opencv.imgproc.Imgproc.boundingRect;
 import static org.opencv.objdetect.Objdetect.DICT_5X5_250;
 import static org.opencv.objdetect.Objdetect.getPredefinedDictionary;
 
@@ -85,7 +87,7 @@ public final class Vision {
         double[] deltaHorizontal = {topLeft[0] - topRight[0], topLeft[1] - topRight[1]};
         double[] deltaVertical = {topLeft[0] - bottomLeft[0], topLeft[1] - bottomLeft[1]};
         double distance = .05;
-        double scale = 1.00;
+        double scale = 1.03;
 
         double[] dirHorizontal = {deltaHorizontal[0] / distance, deltaHorizontal[1] / distance};
         double[] dirVertical = {deltaVertical[0] / distance, deltaVertical[1] / distance};
@@ -99,7 +101,8 @@ public final class Vision {
         Point bottomLeftBound = new Point(scale * (-1 * dirVertical[0] * .15) + topLeftBound.x,
                 scale * (-1 * dirVertical[1] * .15) + topLeftBound.y);
         List<MatOfPoint> points = new ArrayList<>();
-        points.add(new MatOfPoint(topLeftBound, topRightBound, bottomRightBound, bottomLeftBound));
+        MatOfPoint rectanglePoints = new MatOfPoint(topLeftBound, topRightBound, bottomRightBound, bottomLeftBound);
+        points.add(rectanglePoints);
 
         Mat mask = Mat.zeros(in.size(), in.type());
         Imgproc.fillPoly(mask, points, new Scalar(255));
@@ -109,37 +112,71 @@ public final class Vision {
         Mat cropped = new Mat();
         Core.bitwise_and(invert, mask, cropped);
         Core.bitwise_not(cropped, cropped);
-        return cropped;
+
+        Rect rectCrop = boundingRect(rectanglePoints);
+        //api.saveMatImage(new Mat(cropped, rectCrop), "cropTest" + currTarget + ".jpg");
+
+        return cropped;//cropPreserveAspectRatio(cropped, rectCrop);
 
     }
 
-    public static gov.nasa.arc.astrobee.types.Point arucoOffset(Mat img, int target) {
-        ArrayList<Mat> corners = new ArrayList<>();
-        Mat ids = new Mat();
-        Mat rvec = new Mat();
-        Mat tvec = new Mat();
+    public static Mat cropPreserveAspectRatio(Mat img, Rect bound) {
+        //do we need it to be perfect scalar?
+        double aspectRatio = img.size().width / img.size().height;
 
+        if (aspectRatio >= 1) { //horizontal case... will need to implement vertical
+            Point br = bound.br(); //bottom right
+            Point tl = bound.tl(); //top left
+            Point center = avgPoint (tl, br);
+            double newWidth = aspectRatio * bound.width;
+            double deltaW = newWidth - bound.width;
+            if (center.x >= img.size().width / 2.0) { //right half of img
+                Point newTl = new Point (tl.x - (int) (deltaW), tl.y);
+                bound = new Rect(newTl, br);
 
-        arucoDetector.detectMarkers(img, corners, ids);
-        Aruco.estimatePoseSingleMarkers(corners, .05f, camMat, distortionCoefficients, rvec, tvec);
+                return new Mat(img, bound);
+            } else { //left half of img
+                Point newBr = new Point (br.x + (int) (deltaW), br.y);
+                bound = new Rect(tl, newBr);
 
-        for (int i = 0; i < corners.size(); i++) {
-            if (ids.get(i, 0)[0] - 100 == target) {
-                double[] pt = tvec.row(i).get(0, 0);
-                pt[2] = 0;
-
-                if (target == 1) {
-                    return new gov.nasa.arc.astrobee.types.Point(pt[0], -pt[2], pt[1]);
-                } else if (target == 2 || target == 3) {
-                    return new gov.nasa.arc.astrobee.types.Point(pt[1], pt[0], -pt[2]);
-                } else if (target == 4) {
-                    return new gov.nasa.arc.astrobee.types.Point(-pt[2], -pt[0], -pt[1]);
-                }
+                return new Mat(img, bound);
             }
+        } else {
+            return img;
         }
-        Log.i("ERROR", currTarget + " target's aruco marker not found(arucoOffset)");
-        return new gov.nasa.arc.astrobee.types.Point();
     }
+
+    public static Point avgPoint(Point p1, Point p2) {
+        return new Point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0);
+    }
+
+//    public static gov.nasa.arc.astrobee.types.Point arucoOffset(Mat img, int target) {
+//        ArrayList<Mat> corners = new ArrayList<>();
+//        Mat ids = new Mat();
+//        Mat rvec = new Mat();
+//        Mat tvec = new Mat();
+//
+//
+//        arucoDetector.detectMarkers(img, corners, ids);
+//        Aruco.estimatePoseSingleMarkers(corners, .05f, camMat, distortionCoefficients, rvec, tvec);
+//
+//        for (int i = 0; i < corners.size(); i++) {
+//            if (ids.get(i, 0)[0] - 100 == target) {
+//                double[] pt = tvec.row(i).get(0, 0);
+//                pt[2] = 0;
+//
+//                if (target == 1) {
+//                    return new gov.nasa.arc.astrobee.types.Point(pt[0], -pt[2], pt[1]);
+//                } else if (target == 2 || target == 3) {
+//                    return new gov.nasa.arc.astrobee.types.Point(pt[1], pt[0], -pt[2]);
+//                } else if (target == 4) {
+//                    return new gov.nasa.arc.astrobee.types.Point(-pt[2], -pt[0], -pt[1]);
+//                }
+//            }
+//        }
+//        Log.i("ERROR", currTarget + " target's aruco marker not found(arucoOffset)");
+//        return new gov.nasa.arc.astrobee.types.Point();
+//    }
 
     public static gov.nasa.arc.astrobee.types.Point[] arucoOffsetCenter(Mat img, int target) {
         ArrayList<Mat> corners = new ArrayList<>();
@@ -158,7 +195,6 @@ public final class Vision {
                 double[] topLeft =  corner.get(0, 0);
                 double[] topRight = corner.get(0, 1);
                 double[] bottomLeft = corner.get(0, 3);
-                //double[] bottomRight = corner.get(0, 2);
 
                 double[] deltaHorizontal = {topLeft[0] - topRight[0], topLeft[1] - topRight[1]};
                 double[] deltaVertical = {topLeft[0] - bottomLeft[0], topLeft[1] - bottomLeft[1]};
@@ -172,7 +208,7 @@ public final class Vision {
                 deltaVertical[0] = deltaVertical[0] / distVertical;
                 deltaVertical[1] = deltaVertical[1] / distVertical;
 
-                double[] centerAdj = {(.1375 * deltaHorizontal[0]) + (-.0375 * deltaVertical[0]), (.1375 * deltaHorizontal[0]) + (-.0375 * deltaVertical[0])};
+                double[] centerAdj = {(.1375 * deltaHorizontal[0]) + (-.0375 * deltaVertical[0]), (.1375 * deltaHorizontal[1]) + (-.0375 * deltaVertical[1])};
 
                 double[] pt = tvec.row(i).get(0, 0);
                 pt[0] = pt[0] + centerAdj[0];
@@ -214,7 +250,7 @@ public final class Vision {
     public static boolean targetItemReadjust(gov.nasa.arc.astrobee.types.Point p) {
         double dist = distance(p);
         double angle = angle(p);
-        boolean result = angle >= 15 || dist >= .85;
+        boolean result = angle >= 24 || dist >= .85;
 
         Log.i("TargetItemStats", "distance : " + dist + ", angle : " + angle + ", will be readjusting : " + result);
 

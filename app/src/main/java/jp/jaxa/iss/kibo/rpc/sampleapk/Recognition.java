@@ -34,7 +34,7 @@ public class Recognition implements Runnable{
     public Net model;
     public Context context;
     public KiboRpcApi api;
-    public String[] targets = new String[4];
+    public RecognitionResult[] targets = new RecognitionResult[4];
     public ArucoDetector arucoDetector = new ArucoDetector(getPredefinedDictionary(DICT_5X5_250));
     public int finalTarget;
     public int id;
@@ -190,13 +190,20 @@ public class Recognition implements Runnable{
                 //Log.i ("DebuggingTarg4 glitch", "targets[currTarget - 1] : " + currTarget + ", " + finalTarget + ", " + (currTarget == finalTarget));
                 if (currTarget != 0 && targets[currTarget - 1] == null) {
                     api.setAreaInfo(currTarget, result.category, result.numObjects);
-                    targets[currTarget - 1] = result.category;
+                    targets[currTarget - 1] = result;
                 } else if (currTarget == 0){
                     api.reportRoundingCompletion();
                     for (int j = 0; j < targets.length; j++) {
-                        if (result.category.equals(targets[j])) {
+                        if (targets[j] == null) {
+                            targets[j] = new RecognitionResult(new Mat(), 0, "beaker");
+                        }
+                        if (result.category.equals(targets[j].category)) {
                             finalTarget = j + 1;
                             return;
+                        }
+                        if (finalTarget == 4 && targets[j].numObjects == 0 && targets[j].category.equals("beaker")) {
+                            finalTarget = j + 1;
+                            Log.i("RECOGNITION_DEBUG", "defaulted to unknown target");
                         }
                     }
                 }
