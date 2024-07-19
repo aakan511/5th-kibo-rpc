@@ -61,6 +61,9 @@ dependencies {
 //    implementation 'org.pytorch:pytorch_android_lite:2.1.0'
 //    implementation 'org.pytorch:pytorch_android_torchvision_lite:2.1.0'
 
+    //implementation 'com.microsoft.onnxruntime:onnxruntime-android:latest.release'  // full package (can switch to this if needed)
+    implementation 'com.microsoft.onnxruntime:onnxruntime-mobile:latest.release'
+
 //    implementation("com.google.guava:guava:24.0-android")
 
 }
