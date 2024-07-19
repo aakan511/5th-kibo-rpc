@@ -58,9 +58,8 @@ public class YourService extends KiboRpcService {
         r.identify(image);
 
         // Target item
-        r.finalTarget = 2;
+        r.finalTarget = 3;
         goToTarget(5, r.finalTarget);
-//        goToTarget(5, 4);
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
