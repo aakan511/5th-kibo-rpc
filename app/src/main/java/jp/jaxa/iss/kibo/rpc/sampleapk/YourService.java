@@ -34,14 +34,18 @@ public class YourService extends KiboRpcService {
 
         // Target 1
         goToTarget(0, 1);
+        snap.takeImage(true);
         snap.start();
 
         // Target 2 & 3
         goToTarget(1, 2);
+//        snap.switchToDockCam();
+        //snap.takeImage(false);
         snap.start();
 
         // Target 4
         goToTarget(3, 4);
+        snap.takeImage(true);
         snap.start();
 
         // Astronaut
@@ -58,30 +62,30 @@ public class YourService extends KiboRpcService {
         r.identify(image);
 
         // Target item
-        r.finalTarget = 3;
+//        r.finalTarget = 3;
         goToTarget(5, r.finalTarget);
 
         api.flashlightControlFront(.01f);
         image = api.getMatNavCam();
         Point[] distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
-//        if (Vision.targetItemReadjust(distanceTargetItem[1])) {
-//            Point adjustment = distanceTargetItem[0];
-//            Log.i("adjustment", "(" + adjustment.getX() + ", " + adjustment.getY() + ", " + adjustment.getZ() + ")");
-//            Point currPos = api.getRobotKinematics().getPosition();
-//            Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
-////        image = Vision.undistort(image);
-////        api.saveMatImage(image, "front6.jpg");
-//            moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "finalAdjustment");
-//        }
-//
-////        api.flashlightControlFront(.01f);
-//        image = api.getMatNavCam();
-//
-//        //FOR DEBUG ONLY REMOVE LATER
-//        distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
-//        Vision.targetItemReadjust(distanceTargetItem[1]);
-//
+        if (Vision.targetItemReadjust(distanceTargetItem[1])) {
+            Point adjustment = distanceTargetItem[0];
+            Log.i("adjustment", "(" + adjustment.getX() + ", " + adjustment.getY() + ", " + adjustment.getZ() + ")");
+            Point currPos = api.getRobotKinematics().getPosition();
+            Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
 //        image = Vision.undistort(image);
+//        api.saveMatImage(image, "front6.jpg");
+            moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "finalAdjustment");
+        }
+
+//        api.flashlightControlFront(.01f);
+        image = api.getMatNavCam();
+
+        //FOR DEBUG ONLY REMOVE LATER
+        distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
+        Vision.targetItemReadjust(distanceTargetItem[1]);
+
+        image = Vision.undistort(image);
         api.saveMatImage(image, "front7_" + Vision.randName() + "_.jpg");
 
         api.takeTargetItemSnapshot();
@@ -97,41 +101,43 @@ public class YourService extends KiboRpcService {
         // write your plan 3 here.
     }
 
-//    public static void takeSnapshot(KiboRpcApi api, Recognition r) {
-//        //api.flashlightControlFront(.01f);
-//        Mat image = api.getMatNavCam();
-//        int target = Vision.currTarget;
-//
-//        image = Vision.undistort(image);
-//        api.saveMatImage(image, "front" + target + "_" + Vision.randName() + ".jpg");
-//
-//        r.identify(image);
-//
-//        Vision.currTarget++;
-//    }
 }
 
 class TargetSnapshot extends Thread{
     KiboRpcApi api;
     Recognition r;
+    boolean snapshotFront;
+    Mat image;
 
     public TargetSnapshot (KiboRpcApi api, Recognition r) {
         this.api = api;
         this.r = r;
+        snapshotFront = true;
+        image = new Mat();
     }
 
     public void run() {
         //api.flashlightControlFront(.01f);
-        Mat image = api.getMatNavCam();
+//        Mat image = snapshotFront ? api.getMatNavCam() : api.getMatDockCam();
         int target = Vision.currTarget;
 
-        image = Vision.undistort(image);
+        image = snapshotFront ? Vision.undistort(image) : Vision.undistortRear(image);
         api.saveMatImage(image, "front" + target + "_" + Vision.randName() + ".jpg");
 
         r.identify(image);
 
+        snapshotFront = true; //for next image
         Vision.currTarget++;
     }
+
+    public void takeImage(boolean takeWithFront) {
+        snapshotFront = takeWithFront;
+        image = snapshotFront ? api.getMatNavCam() : api.getMatDockCam();
+    }
+
+//    public void switchToDockCam() {
+//        snapshotFront = false;
+//    }
 }
 
 class ReadjustSnapshot extends TargetSnapshot {

@@ -76,6 +76,12 @@ public final class Vision {
         return dst;
     }
 
+    public static Mat undistortRear(Mat src){
+        Mat dst = new Mat();
+        Calib3d.undistort(src, dst, rearCamMat, rearDistortionCoefficients);
+        return dst;
+    }
+
     public static Mat arucoCrop(Mat in, Mat corner) {
         Log.i("arucoCrop", "width: " + corner.size().width + ", height: " + corner.height());
 

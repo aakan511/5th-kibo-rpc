@@ -17,9 +17,9 @@ public final class Movement {
     //Path for going to target
     public static Path[] scanningPaths = {
             new Path(new Quaternion(-.123f, -0.123f, -.696f, .696f), new Point(10.7d, -9.6d, 4.8d)  ), //new Point(10.95d, -9.2d, 5.195d) 10.7d, -9.8d, 4.7d)
-            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.75, -8.4, 4.7)), //10.87, -8.35, 4.7)
+            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.75, -8.4, 4.7)), //10.87, -8.35, 4.7) ,,,,, 0f, 0.707f, 0f, 0.707f
             null, //new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.925d, -7.99, 4.56))
-            new Path(new Quaternion(0f, .707f, -.707f, 0f), new Point(10.75, -7, 4.75)),
+            new Path(new Quaternion(0f, .707f, .707f, 0f), new Point(10.75, -7, 4.75)),
             new Path(new Quaternion(0, 0, .707f, .707f), new Point(11, -6.8525, 4.75))}; //11.143
     public static Path[] returnPaths = {
             new Path(new Quaternion(0f, 0f, -.707f, .707f), new Point(10.75, -7.33, 4.82),  new Point(10.75d, -9.76d, 4.85d)), //
@@ -192,6 +192,11 @@ public final class Movement {
             }
         } else {
             for (int i = 0; i < returnPaths[end].length; i++) {
+//                if (i == returnPaths[end].length - 1) {
+//                    moveAstrobee(returnPaths[end].points[i], returnPaths[end].orientation, 'A', false, "goingToTarget");
+//                } else {
+//                    moveAstrobee(returnPaths[end].points[i], api.getRobotKinematics().getOrientation(), 'A', false, "goingToTarget");
+//                }
                 moveAstrobee(returnPaths[end].points[i], returnPaths[end].orientation, 'A', false, "goingToTarget");
             }
         }
