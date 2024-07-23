@@ -50,6 +50,7 @@ public class Recognition implements Runnable{
   public RecognitionResult[] targets = new RecognitionResult[4];
   public ArucoDetector arucoDetector = new ArucoDetector(getPredefinedDictionary(DICT_5X5_250));
   public int finalTarget;
+  public int[] imageShape = {1, 3, 640, 640};
 
 //    private static final String[] CLASS_NAMES = {"beaker", "dropper", "goggle", "hammer",
 //            "kapton_tape", "screwdriver", "thermometer", "top", "watch", "wrench"};
@@ -80,18 +81,42 @@ public class Recognition implements Runnable{
     }
 
     public float[] preprocessImage(Mat image) {
+
+        if (image.empty()) {
+            throw new RuntimeException("The image was not loaded properly - tensor not created");
+        }
+
         Mat resizedImage = new Mat();
-        Imgproc.resize(image, resizedImage, new Size(640, 640));
+        Imgproc.resize(image, resizedImage, new Size(imageShape[2], imageShape[3]));
+
         resizedImage.convertTo(resizedImage, CvType.CV_32F, 1.0 / 255);
+        List<Mat> channels = new ArrayList<>(3); // Represents R G B
+        Core.split(resizedImage, channels);
+
+        float[] inputTensorValues = new float[imageShape[0] * imageShape[1] * imageShape[2] * imageShape[3]];
+        int index = 0;
+
+        for (Mat channel : channels) {
+            float[] data = new float[(int) (channel.total() * channel.channels())];
+            channel.get(0, 0, data);
+            System.arraycopy(data, 0, inputTensorValues, index, data.length);
+            index += data.length;
+        }
+
+        return inputTensorValues;
+
+//      Mat resizedImage = new Mat();
+//      Imgproc.resize(image, resizedImage, new Size(640, 640));
+//      resizedImage.convertTo(resizedImage, CvType.CV_32F, 1.0 / 255);
 //
 //        Mat blob = Dnn.blobFromImage(resizedImage);
 //
 //        float[] inputTensor = new float[(int) (blob.total())];
 //        blob.get(0, 0, inputTensor);
 
-        OnnxTensor t = OnnxTensor.createTensor()
+//        OnnxTensor t = OnnxTensor.createTensor()
 
-        return inputTensor;
+//        return inputTensor;
     }
 
     public List<Detection> filterDetections(float[] results, float confidenceThreshold, int originalWidth, int originalHeight) {
@@ -118,11 +143,34 @@ public class Recognition implements Runnable{
         return detections;
     }
 
-    public float[] runInference(float[] inputTensor) throws OrtException {
-        OrtSession.Result result = session.run(Collections.singletonMap("images", OnnxTensor.createTensor(env, inputTensor)));
-        float[] output = ((float[][]) result.get(0).getValue())[0];
+    public float[] runInference(float[] inputTensorValues) throws OrtException {
+        long[] shape = {1, imageShape[1], imageShape[2], imageShape[3]};
+        OnnxTensor inputTensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(inputTensorValues), shape);
+        OrtSession.Result result = session.run(Collections.singletonMap(session.getInputNames().iterator().next(), inputTensor));
+        float[][][] output = ((float[][][]) result.get(0).getValue());
+        inputTensor.close();
         result.close();
-        return output;
+        return flatten3DArray(output);
+    }
+
+    private float[] flatten3DArray(float[][][] arr) {
+        int size = 0;
+        for (float[][] subArr : arr) {
+            for (float[] subSubArr : subArr) {
+                size += subSubArr.length;
+            }
+        }
+
+        float[] flattened = new float[size];
+        int idx = 0;
+        for (float[][] subArr : arr) {
+            for (float[] subSubArr : subArr) {
+                for (float values : subSubArr) {
+                    flattened[idx++] = values;
+                }
+            }
+        }
+        return flattened;
     }
 
     public void drawBoundingBoxes(Mat image, List<Detection> detections) {
