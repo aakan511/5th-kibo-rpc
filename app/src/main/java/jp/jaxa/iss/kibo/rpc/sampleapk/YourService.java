@@ -26,7 +26,7 @@ public class YourService extends KiboRpcService {
         Movement.api = api;
         Vision v = new Vision(api);
 
-        Recognition r = new Recognition(getApplicationContext(), R.raw.falcon, new String[]{"beaker", "pipette", "goggle", "hammer", "kapton_tape", "screwdriver", "thermometer",
+        Recognition r = new Recognition(getApplicationContext(), R.raw.armstrong, new String[]{"beaker", "pipette", "goggle", "hammer", "kapton_tape", "screwdriver", "thermometer",
                 "top", "watch", "wrench"}, api);
 
         (new Thread(r)).start();

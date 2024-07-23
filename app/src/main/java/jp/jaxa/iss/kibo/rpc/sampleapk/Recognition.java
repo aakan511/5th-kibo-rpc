@@ -73,7 +73,7 @@ public class Recognition implements Runnable{
         try {
             env = OrtEnvironment.getEnvironment();
             String modelPath = Utils.exportResource(context, id);
-            session = env.createSession(modelPath, new OrtSession.SessionOptions());
+            session = env.createSession(modelPath);
         } catch(Exception e) {
             Log.e("Recognition", "Error Loading Model", e);
         }
@@ -83,11 +83,13 @@ public class Recognition implements Runnable{
         Mat resizedImage = new Mat();
         Imgproc.resize(image, resizedImage, new Size(640, 640));
         resizedImage.convertTo(resizedImage, CvType.CV_32F, 1.0 / 255);
+//
+//        Mat blob = Dnn.blobFromImage(resizedImage);
+//
+//        float[] inputTensor = new float[(int) (blob.total())];
+//        blob.get(0, 0, inputTensor);
 
-        Mat blob = Dnn.blobFromImage(resizedImage);
-
-        float[] inputTensor = new float[(int) (blob.total())];
-        blob.get(0, 0, inputTensor);
+        OnnxTensor t = OnnxTensor.createTensor()
 
         return inputTensor;
     }
@@ -117,7 +119,7 @@ public class Recognition implements Runnable{
     }
 
     public float[] runInference(float[] inputTensor) throws OrtException {
-        OrtSession.Result result = session.run(Collections.singletonMap(session.getInputNames().iterator().next(), OnnxTensor.createTensor(env, inputTensor)));
+        OrtSession.Result result = session.run(Collections.singletonMap("images", OnnxTensor.createTensor(env, inputTensor)));
         float[] output = ((float[][]) result.get(0).getValue())[0];
         result.close();
         return output;
