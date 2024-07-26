@@ -40,7 +40,7 @@ public class YourService extends KiboRpcService {
         // Target 2 & 3
         goToTarget(1, 2);
 //        snap.switchToDockCam();
-        //snap.takeImage(false);
+        snap.takeImage(true);
         snap.start();
 
         // Target 4

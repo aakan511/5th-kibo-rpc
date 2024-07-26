@@ -182,25 +182,25 @@ public class Recognition implements Runnable{
         }
     }
 
-    public List<Detection> identify(String imagePath, float confidenceThreshold, String outputPath) {
-        Mat image = Imgcodecs.imread(imagePath);
-        int origHeight = image.rows();
-        int origWidth = image.cols();
-
-        try {
-            float[] inputTensor = preprocessImage(image);
-            float[] results = runInference(inputTensor);
-
-            List<Detection> detections = filterDetections(results, confidenceThreshold, origWidth, origHeight);
-            drawBoundingBoxes(image, detections);
-            Imgcodecs.imwrite(outputPath, image);
-
-            return detections;
-        } catch (Exception e) {
-            Log.e("Recognition", "Identification Error", e);
-            return new ArrayList<>();
-        }
-    }
+//    public List<Detection> identify(String imagePath, float confidenceThreshold, String outputPath) {
+//        Mat image = Imgcodecs.imread(imagePath);
+//        int origHeight = image.rows();
+//        int origWidth = image.cols();
+//
+//        try {
+//            float[] inputTensor = preprocessImage(image);
+//            float[] results = runInference(inputTensor);
+//
+//            List<Detection> detections = filterDetections(results, confidenceThreshold, origWidth, origHeight);
+//            drawBoundingBoxes(image, detections);
+//            Imgcodecs.imwrite(outputPath, image);
+//
+//            return detections;
+//        } catch (Exception e) {
+//            Log.e("Recognition", "Identification Error", e);
+//            return new ArrayList<>();
+//        }
+//    }
 
     private static class Detection {
         float confidence;
@@ -221,7 +221,7 @@ public class Recognition implements Runnable{
         int origHeight = image.rows();
         int origWidth = image.cols();
 
-        float confidenceThreshold = .2f;
+        float confidenceThreshold = .1f;
 
         try {
             float[] inputTensor = preprocessImage(image);
