@@ -119,70 +119,20 @@ public final class Vision {
         Core.bitwise_and(invert, mask, cropped);
         Core.bitwise_not(cropped, cropped);
 
-        Rect rectCrop = boundingRect(rectanglePoints);
+        //Rect rectCrop = boundingRect(rectanglePoints);
         //api.saveMatImage(new Mat(cropped, rectCrop), "cropTest" + currTarget + ".jpg");
 
         return cropped;//cropPreserveAspectRatio(cropped, rectCrop);
 
     }
 
-    public static Mat cropPreserveAspectRatio(Mat img, Rect bound) {
-        //do we need it to be perfect scalar?
-        double aspectRatio = img.size().width / img.size().height;
 
-        if (aspectRatio >= 1) { //horizontal case... will need to implement vertical
-            Point br = bound.br(); //bottom right
-            Point tl = bound.tl(); //top left
-            Point center = avgPoint (tl, br);
-            double newWidth = aspectRatio * bound.width;
-            double deltaW = newWidth - bound.width;
-            if (center.x >= img.size().width / 2.0) { //right half of img
-                Point newTl = new Point (tl.x - (int) (deltaW), tl.y);
-                bound = new Rect(newTl, br);
-
-                return new Mat(img, bound);
-            } else { //left half of img
-                Point newBr = new Point (br.x + (int) (deltaW), br.y);
-                bound = new Rect(tl, newBr);
-
-                return new Mat(img, bound);
-            }
-        } else {
-            return img;
-        }
-    }
 
     public static Point avgPoint(Point p1, Point p2) {
         return new Point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0);
     }
 
-//    public static gov.nasa.arc.astrobee.types.Point arucoOffset(Mat img, int target) {
-//        ArrayList<Mat> corners = new ArrayList<>();
-//        Mat ids = new Mat();
-//        Mat rvec = new Mat();
-//        Mat tvec = new Mat();
-//
-//
-//        arucoDetector.detectMarkers(img, corners, ids);
-//        Aruco.estimatePoseSingleMarkers(corners, .05f, camMat, distortionCoefficients, rvec, tvec);
-//
-//        for (int i = 0; i < corners.size(); i++) {
-//            if (ids.get(i, 0)[0] - 100 == target) {
-//                double[] pt = tvec.row(i).get(0, 0);
-//                pt[2] = 0;
-//
-//                if (target == 1) {
-//                    return new gov.nasa.arc.astrobee.types.Point(pt[0], -pt[2], pt[1]);
-//                } else if (target == 2 || target == 3) {
-//                    return new gov.nasa.arc.astrobee.types.Point(pt[1], pt[0], -pt[2]);
-//                } else if (target == 4) {
-//                    return new gov.nasa.arc.astrobee.types.Point(-pt[2], -pt[0], -pt[1]);
-//                }
-//            }
-//        }
-//        Log.i("ERROR", currTarget + " target's aruco marker not found(arucoOffset)");
-//        return new gov.nasa.arc.astrobee.types.Point();
-//    }
+
 
     public static gov.nasa.arc.astrobee.types.Point[] arucoOffsetCenter(Mat img, int target) {
         ArrayList<Mat> corners = new ArrayList<>();

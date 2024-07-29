@@ -2,6 +2,7 @@ package jp.jaxa.iss.kibo.rpc.sampleapk;
 
 import android.util.Log;
 
+import gov.nasa.arc.astrobee.Result;
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcApi;
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcService;
 
@@ -18,7 +19,7 @@ import static jp.jaxa.iss.kibo.rpc.sampleapk.Movement.moveAstrobee;
 
 public class YourService extends KiboRpcService {
 
-    public static final int LOOP_MAX = 4;
+    public static final int LOOP_MAX = 6;
     @Override
     protected void runPlan1(){
         // Start Mission
@@ -26,11 +27,13 @@ public class YourService extends KiboRpcService {
         Movement.api = api;
         Vision v = new Vision(api);
 
-        Recognition r = new Recognition(getApplicationContext(), R.raw.armstrong, new String[]{"beaker", "pipette", "goggle", "hammer", "kapton_tape", "screwdriver", "thermometer",
+        Recognition r = new Recognition(getApplicationContext(), R.raw.blinker, new String[]{"beaker", "pipette", "goggle", "hammer", "kapton_tape", "screwdriver", "thermometer",
                 "top", "watch", "wrench"}, api);
 
         (new Thread(r)).start();
         TargetSnapshot snap = new TargetSnapshot(api, r);
+        Result result = api.flashlightControlFront(.05f);
+        Log.i("flashlightControlResultOn", "" + result.hasSucceeded());
 
         // Target 1
         goToTarget(0, 1);
@@ -117,8 +120,6 @@ class TargetSnapshot extends Thread{
     }
 
     public void run() {
-        //api.flashlightControlFront(.01f);
-//        Mat image = snapshotFront ? api.getMatNavCam() : api.getMatDockCam();
         int target = Vision.currTarget;
 
         image = snapshotFront ? Vision.undistort(image) : Vision.undistortRear(image);
@@ -132,12 +133,13 @@ class TargetSnapshot extends Thread{
 
     public void takeImage(boolean takeWithFront) {
         snapshotFront = takeWithFront;
+//        Result result = snapshotFront ? api.flashlightControlFront(.05f) : api.flashlightControlBack(.05f);
+//        Log.i("flashlightControlResultOn", result.toString());
         image = snapshotFront ? api.getMatNavCam() : api.getMatDockCam();
+//        result = snapshotFront ? api.flashlightControlFront(.00f) : api.flashlightControlBack(.00f);
+//        Log.i("flashlightControlResultOff", result.toString());
     }
 
-//    public void switchToDockCam() {
-//        snapshotFront = false;
-//    }
 }
 
 class ReadjustSnapshot extends TargetSnapshot {

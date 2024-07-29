@@ -16,14 +16,14 @@ public final class Movement {
 
     //Path for going to target
     public static Path[] scanningPaths = {
-            new Path(new Quaternion(-.123f, -0.123f, -.696f, .696f), new Point(10.7d, -9.6d, 4.8d)  ), //new Point(10.95d, -9.2d, 5.195d) 10.7d, -9.8d, 4.7d)
-            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.75, -8.4, 4.7)), //10.87, -8.35, 4.7) ,,,,, 0f, 0.707f, 0f, 0.707f
+            new Path(new Quaternion(-.123f, -0.123f, -.696f, .696f), new Point(10.7d, -9.6d, 4.85d)  ), // new Point(10.7d, -9.6d, 4.8d)
+            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.75, -8.3, 4.7)), //new Point(10.75, -8.4, 4.7))
             null, //new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.925d, -7.99, 4.56))
             new Path(new Quaternion(0f, .707f, .707f, 0f), new Point(10.75, -7, 4.75)),
             new Path(new Quaternion(0, 0, .707f, .707f), new Point(11, -6.8525, 4.75))}; //11.143
     public static Path[] returnPaths = {
-            new Path(new Quaternion(0f, 0f, -.707f, .707f), new Point(10.75, -7.33, 4.82),  new Point(10.75d, -9.76d, 4.85d)), //
-            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.74, -7.33, 4.6), new Point(10.925, -8.875, 4.56)),   //
+            new Path(new Quaternion(0f, 0f, -.707f, .707f), new Point(10.75, -7.33, 4.82),  new Point(10.75d, -9.76d, 4.85d)),
+            new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.74, -7.33, 4.6), new Point(10.925, -8.875, 4.56)),
             new Path(new Quaternion(0f, 0.707f, 0f, 0.707f), new Point(10.74, -7.33, 4.6),  new Point(10.925d, -7.99, 4.56)), //new Point(10.74, -7.33, 4.6),  new Point(10.925d, -7.99, 4.56))
             new Path(new Quaternion(0f, .707f, -.707f, 0f), new Point(10.6, -6.8525, 4.8))
     };
@@ -238,5 +238,4 @@ class Path {
         points = p;
         length = p.length;
     }
-    public Path() {} //placeholder will delete later
 }

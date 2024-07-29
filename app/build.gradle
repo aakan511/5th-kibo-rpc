@@ -37,10 +37,6 @@ android {
         exclude 'META-INF/dependencies.txt'
         exclude 'META-INF/LGPL2.1'
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
 }
 
 dependencies {
@@ -65,8 +61,8 @@ dependencies {
 //    implementation 'org.pytorch:pytorch_android_lite:2.1.0'
 //    implementation 'org.pytorch:pytorch_android_torchvision_lite:2.1.0'
 
-    implementation 'com.microsoft.onnxruntime:onnxruntime-android:latest.release'  // full package (can switch to this if needed)
-//    implementation 'com.microsoft.onnxruntime:onnxruntime-mobile:1.18.0'
+    //implementation 'com.microsoft.onnxruntime:onnxruntime-android:latest.release'  // full package (can switch to this if needed)
+//    implementation 'com.microsoft.onnxruntime:onnxruntime-mobile:latest.release'
 
 //    implementation("com.google.guava:guava:24.0-android")
 
