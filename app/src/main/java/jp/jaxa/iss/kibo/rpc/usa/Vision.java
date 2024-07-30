@@ -117,20 +117,8 @@ public final class Vision {
         Core.bitwise_and(invert, mask, cropped);
         Core.bitwise_not(cropped, cropped);
 
-        //Rect rectCrop = boundingRect(rectanglePoints);
-        //api.saveMatImage(new Mat(cropped, rectCrop), "cropTest" + currTarget + ".jpg");
-
-        return cropped;//cropPreserveAspectRatio(cropped, rectCrop);
-
+        return cropped;
     }
-
-
-
-    public static Point avgPoint(Point p1, Point p2) {
-        return new Point((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0);
-    }
-
-
 
     public static gov.nasa.arc.astrobee.types.Point[] arucoOffsetCenter(Mat img, int target) {
         ArrayList<Mat> corners = new ArrayList<>();
@@ -232,7 +220,7 @@ public final class Vision {
             if (!arucoDetection.corners.isEmpty()) {
 //                image = undistort(image);
                 api.flashlightControlFront(0.00f);
-                Log.i("Vision", "Target image detected");
+                Log.i("Vision", "Target image detected: " + ((System.currentTimeMillis() - startTime) / 1000));
                 return arucoDetection;
 
             }

@@ -129,46 +129,6 @@ public final class Movement {
 
         return (Kinematics.Confidence.GOOD);
     }
-    /************************************************************/
-    /* computeQuaternion()
-    /* Uses global values of yaw, pitch, roll to compute the
-    /* quaternion.
-    /*      rotation x - roll
-    /*              y - pitch
-     /*             z - yaw
-    /************************************************************/
-    public static Quaternion computeQuaternion(double roll,double pitch, double yaw)
-    {
-        //Precompute sine and cosine values.
-        //Input Euler Angles are in degrees
-        double su = (double) Math.sin(roll  *Math.PI/360);
-        double sv = (double)Math.sin(pitch*Math.PI/360);
-        double sw = (double)Math.sin(yaw *Math.PI/360);
-        double cu = (double)Math.cos(roll  *Math.PI/360);
-        double cv = (double)Math.cos(pitch*Math.PI/360);
-        double cw = (double)Math.cos(yaw *Math.PI/360);
-
-        //Quaternion
-        float q0 = 1.0f;
-        float q1 = 0.0f;
-        float q2 = 0.0f;
-        float q3 = 0.0f;
-
-        q0 = (float)(cu*cv*cw + su*sv*sw);
-        q1 = (float)(su*cv*cw - cu*sv*sw);
-        q2 = (float)(cu*sv*cw + su*cv*sw);
-        q3 = (float)(cu*cv*sw - su*sv*cw);
-
-        //Display Quaternion, rounded to three sig. figs.
-        q0 = (float)Math.floor(q0*10000)/10000;
-        q1 = (float)Math.floor(q1*10000)/10000;
-        q2 = (float)Math.floor(q2*10000)/10000;
-        q3 = (float)Math.floor(q3*10000)/10000;
-
-
-        return(new Quaternion (q1,q2,q3,q0));
-    }
-
 
     public static void wait(double sec)
     {
