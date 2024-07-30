@@ -55,16 +55,29 @@ public class YourService extends KiboRpcService {
         goToTarget(4, 5);
         api.reportRoundingCompletion();
 
-        Movement.wait(2);
+        //Movement.wait(2);
 
         api.flashlightControlFront(.01f);
-        Mat image = api.getMatNavCam();
-        image = Vision.undistort(image);
+        Mat image = null;
+        try {
+            // will wait 30 seconds for aruco to appear
+            // image is first set to null, but there is no chance no target image will be found (Just for error handling purposes)
+            image = Vision.waitForTarget(20);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        if (image != null) {
+            r.identify(image);
+        } else {
+            Log.i("Vision", "No target image detected");
+        }
+        //Mat image = api.getMatNavCam();
+        // image = Vision.undistort(image);
 //        Vision.findAruco(image);
 //        api.saveMatImage(image, "front5.jpg");
-        r.identify(image);
 
-        // Target item
+        // Target item....
 //        r.finalTarget = 3;
         goToTarget(5, r.finalTarget);
 
