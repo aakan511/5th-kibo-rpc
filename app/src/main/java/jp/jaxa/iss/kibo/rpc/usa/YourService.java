@@ -1,4 +1,4 @@
-package jp.jaxa.iss.kibo.rpc.sampleapk;
+package jp.jaxa.iss.kibo.rpc.usa;
 
 import android.util.Log;
 
@@ -10,8 +10,8 @@ import gov.nasa.arc.astrobee.types.Point;
 
 import org.opencv.core.Mat;
 
-import static jp.jaxa.iss.kibo.rpc.sampleapk.Movement.goToTarget;
-import static jp.jaxa.iss.kibo.rpc.sampleapk.Movement.moveAstrobee;
+import static jp.jaxa.iss.kibo.rpc.usa.Movement.goToTarget;
+import static jp.jaxa.iss.kibo.rpc.usa.Movement.moveAstrobee;
 
 /**
  * Class meant to handle commands from the Ground Data System and execute them in Astrobee.
@@ -32,8 +32,8 @@ public class YourService extends KiboRpcService {
 
         (new Thread(r)).start();
         TargetSnapshot snap = new TargetSnapshot(api, r);
-        Result result = api.flashlightControlFront(.05f);
-        Log.i("flashlightControlResultOn", "" + result.hasSucceeded());
+//        Result result = api.flashlightControlFront(.05f);
+//        Log.i("flashlightControlResultOn", "" + result.hasSucceeded());
 
         // Target 1
         goToTarget(0, 1);
@@ -57,21 +57,21 @@ public class YourService extends KiboRpcService {
 
         //Movement.wait(2);
 
-        api.flashlightControlFront(.01f);
-        Mat image = null;
-        try {
-            // will wait 30 seconds for aruco to appear
-            // image is first set to null, but there is no chance no target image will be found (Just for error handling purposes)
-            image = Vision.waitForTarget(20);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        if (image != null) {
-            r.identify(image);
-        } else {
-            Log.i("Vision", "No target image detected");
-        }
+//        api.flashlightControlFront(.01f);
+//        Mat image = null;
+////        try {
+////            // will wait 30 seconds for aruco to appear
+////            // image is first set to null, but there is no chance no target image will be found (Just for error handling purposes)
+////            image = Vision.waitForTarget(30);
+////        } catch (InterruptedException e) {
+////            e.printStackTrace();
+////        }
+//
+//        if (image != null) {
+//            r.identify(image);
+//        } else {
+//            Log.i("Vision", "No target image detected");
+//        }
         //Mat image = api.getMatNavCam();
         // image = Vision.undistort(image);
 //        Vision.findAruco(image);
@@ -79,10 +79,17 @@ public class YourService extends KiboRpcService {
 
         // Target item....
 //        r.finalTarget = 3;
+        ArucoDetection arucoDetection = v.waitForTarget(30);
+        if (arucoDetection != null) {
+            r.identify(arucoDetection.corners, arucoDetection.ids, arucoDetection.image);
+        } else {
+            Log.i("ASTRONAUTERROR", "Astronaut Aruco not found");
+        }
+
         goToTarget(5, r.finalTarget);
 
-        api.flashlightControlFront(.01f);
-        image = api.getMatNavCam();
+        api.flashlightControlFront(.05f);
+        Mat image = api.getMatNavCam();
         Point[] distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
         if (Vision.targetItemReadjust(distanceTargetItem[1])) {
             Point adjustment = distanceTargetItem[0];
@@ -95,15 +102,15 @@ public class YourService extends KiboRpcService {
         }
 
 //        api.flashlightControlFront(.01f);
-        image = api.getMatNavCam();
+//        image = api.getMatNavCam();
 
         //FOR DEBUG ONLY REMOVE LATER
-        distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
-        Vision.targetItemReadjust(distanceTargetItem[1]);
-
-        image = Vision.undistort(image);
-        api.saveMatImage(image, "front7_" + Vision.randName() + "_.jpg");
-
+//        distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
+//        Vision.targetItemReadjust(distanceTargetItem[1]);
+//
+//        image = Vision.undistort(image);
+//        api.saveMatImage(image, "front7_" + Vision.randName() + "_.jpg");
+//
         api.takeTargetItemSnapshot();
     }
 
@@ -146,25 +153,12 @@ class TargetSnapshot extends Thread{
 
     public void takeImage(boolean takeWithFront) {
         snapshotFront = takeWithFront;
-//        Result result = snapshotFront ? api.flashlightControlFront(.05f) : api.flashlightControlBack(.05f);
-//        Log.i("flashlightControlResultOn", result.toString());
+        Result result = snapshotFront ? api.flashlightControlFront(.05f) : api.flashlightControlBack(.05f);
+        Log.i("flashlightControlResultOn", result.toString());
         image = snapshotFront ? api.getMatNavCam() : api.getMatDockCam();
-//        result = snapshotFront ? api.flashlightControlFront(.00f) : api.flashlightControlBack(.00f);
-//        Log.i("flashlightControlResultOff", result.toString());
+        result = snapshotFront ? api.flashlightControlFront(.00f) : api.flashlightControlBack(.00f);
+        Log.i("flashlightControlResultOff", result.toString());
     }
 
 }
 
-class ReadjustSnapshot extends TargetSnapshot {
-
-    public ReadjustSnapshot(KiboRpcApi api, Recognition r) {
-        super(api, r);
-    }
-
-    @Override
-    public void run() {
-        Mat image = Vision.undistort(api.getMatNavCam());
-        r.identify(image);
-        api.saveMatImage(image, "front1_adjusted_" + Vision.randName() + "_.jpg");
-    }
-}

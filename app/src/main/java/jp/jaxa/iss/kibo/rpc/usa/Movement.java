@@ -1,4 +1,4 @@
-package jp.jaxa.iss.kibo.rpc.sampleapk;
+package jp.jaxa.iss.kibo.rpc.usa;
 
 import android.util.Log;
 
@@ -8,7 +8,7 @@ import gov.nasa.arc.astrobee.types.Point;
 import gov.nasa.arc.astrobee.types.Quaternion;
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcApi;
 
-import static jp.jaxa.iss.kibo.rpc.sampleapk.YourService.LOOP_MAX;
+import static jp.jaxa.iss.kibo.rpc.usa.YourService.LOOP_MAX;
 
 
 public final class Movement {
@@ -170,9 +170,9 @@ public final class Movement {
     }
 
 
-    public static void wait(int sec)
+    public static void wait(double sec)
     {
-        int ms = sec* 1000;
+        int ms = (int)(sec* 1000);
 
         try
         {

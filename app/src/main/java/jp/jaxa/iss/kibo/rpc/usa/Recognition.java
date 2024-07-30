@@ -1,4 +1,4 @@
-package jp.jaxa.iss.kibo.rpc.sampleapk;
+package jp.jaxa.iss.kibo.rpc.usa;
 
 import android.content.Context;
 import android.util.Log;
@@ -156,6 +156,10 @@ public class Recognition implements Runnable{
 
         arucoDetector.detectMarkers(in, corners, ids);
 
+        identify(corners, ids, in);
+    }
+
+    public void identify (List<Mat> corners, Mat ids, Mat in){
         for (int i = 0; i < corners.size(); i++) {
             int currTarget = (int) ids.get(i, 0)[0] - 100;
             if (currTarget <= 4) {

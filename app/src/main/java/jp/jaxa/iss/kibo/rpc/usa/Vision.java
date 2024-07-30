@@ -1,4 +1,4 @@
-package jp.jaxa.iss.kibo.rpc.sampleapk;
+package jp.jaxa.iss.kibo.rpc.usa;
 
 import android.util.Log;
 
@@ -10,7 +10,6 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.ArucoDetector;
@@ -22,7 +21,6 @@ import java.util.List;
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcApi;
 
 import static android.content.ContentValues.TAG;
-import static org.opencv.imgproc.Imgproc.boundingRect;
 import static org.opencv.objdetect.Objdetect.DICT_5X5_250;
 import static org.opencv.objdetect.Objdetect.getPredefinedDictionary;
 
@@ -219,28 +217,47 @@ public final class Vision {
         return "" + random;
     }
 
-    public static Mat waitForTarget(int seconds) throws InterruptedException {
+    public static ArucoDetection waitForTarget(int seconds){
         int duration = seconds * 1000;
         long startTime = System.currentTimeMillis();
+        api.flashlightControlFront(.05f);
         while (System.currentTimeMillis() - startTime <= duration) {
             Mat image = api.getMatNavCam();
-            ArrayList corners = new ArrayList<>();
-            Mat ids = new Mat();
-            arucoDetector.detectMarkers(image, corners, ids);
+//            ArrayList corners = new ArrayList<>();
+//            Mat ids = new Mat();
+//            arucoDetector.detectMarkers(image, corners, ids);
+            image = undistort(image);
+            ArucoDetection arucoDetection = new ArucoDetection(image, arucoDetector);
 
-            if (!corners.isEmpty()) {
-                image = undistort(image);
+            if (!arucoDetection.corners.isEmpty()) {
+//                image = undistort(image);
+                api.flashlightControlFront(0.00f);
                 Log.i("Vision", "Target image detected");
-                return image;
+                return arucoDetection;
 
             }
 
-            try {
-                Thread.sleep(250);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                Thread.sleep(250);
+//            } catch (InterruptedException e) {
+//                Log.i("astronautItemWait", "wait failed");
+//                e.printStackTrace();
+//            }
+            Movement.wait(.25);
         }
         return null;
+    }
+}
+
+class ArucoDetection {
+    public ArrayList<Mat> corners;
+    public Mat ids;
+    public Mat image;
+
+    public ArucoDetection(Mat image, ArucoDetector arucoDetector) {
+        this.image = image;
+        corners = new ArrayList<>();
+        ids = new Mat();
+        arucoDetector.detectMarkers(image, corners, ids);
     }
 }

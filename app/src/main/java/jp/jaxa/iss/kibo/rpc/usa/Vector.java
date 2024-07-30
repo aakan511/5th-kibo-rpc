@@ -1,4 +1,4 @@
-package jp.jaxa.iss.kibo.rpc.sampleapk;
+package jp.jaxa.iss.kibo.rpc.usa;
 import gov.nasa.arc.astrobee.types.Point;
 
 public class Vector {
