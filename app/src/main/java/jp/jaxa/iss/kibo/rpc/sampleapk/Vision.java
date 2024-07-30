@@ -218,4 +218,29 @@ public final class Vision {
         int random = (int) (Math.random() * 10000000);
         return "" + random;
     }
+
+    public static Mat waitForTarget(int seconds) throws InterruptedException {
+        int duration = seconds * 1000;
+        long startTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - startTime <= duration) {
+            Mat image = api.getMatNavCam();
+            ArrayList corners = new ArrayList<>();
+            Mat ids = new Mat();
+            arucoDetector.detectMarkers(image, corners, ids);
+
+            if (!corners.isEmpty()) {
+                image = undistort(image);
+                Log.i("Vision", "Target image detected");
+                return image;
+
+            }
+
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
 }
