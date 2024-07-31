@@ -220,7 +220,7 @@ public final class Vision {
             if (!arucoDetection.corners.isEmpty()) {
 //                image = undistort(image);
                 api.flashlightControlFront(0.00f);
-                Log.i("Vision", "Target image detected: " + ((System.currentTimeMillis() - startTime) / 1000));
+                Log.i("Vision", "Target image detected: " + System.currentTimeMillis() + ", " + startTime);
                 return arucoDetection;
 
             }
@@ -231,7 +231,7 @@ public final class Vision {
 //                Log.i("astronautItemWait", "wait failed");
 //                e.printStackTrace();
 //            }
-            Movement.wait(.25);
+            Movement.wait(.05);
         }
         return null;
     }
