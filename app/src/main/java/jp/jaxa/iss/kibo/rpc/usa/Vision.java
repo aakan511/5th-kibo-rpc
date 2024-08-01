@@ -91,7 +91,7 @@ public final class Vision {
         double[] deltaHorizontal = {topLeft[0] - topRight[0], topLeft[1] - topRight[1]};
         double[] deltaVertical = {topLeft[0] - bottomLeft[0], topLeft[1] - bottomLeft[1]};
         double distance = .05;
-        double scale = 1.03;
+        double scale = 1.10; //1.03
 
         double[] dirHorizontal = {deltaHorizontal[0] / distance, deltaHorizontal[1] / distance};
         double[] dirVertical = {deltaVertical[0] / distance, deltaVertical[1] / distance};
