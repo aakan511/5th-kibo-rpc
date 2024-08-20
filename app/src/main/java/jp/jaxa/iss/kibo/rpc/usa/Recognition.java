@@ -115,7 +115,7 @@ public class Recognition implements Runnable{
         MatOfFloat scores = new MatOfFloat(scoref);
         MatOfInt indeces = new MatOfInt();
 
-        Dnn.NMSBoxes(bboxes, scores, .35f, 0.6f, indeces); //nms = .65
+        Dnn.NMSBoxes(bboxes, scores, .4f, 0.6f, indeces); //nms = .65
         Log.i("RecognitionDebug", "indeces total : " + indeces.total());
         List<Integer> result = indeces.total() > 0 ? indeces.toList() : new ArrayList<Integer>();
 
