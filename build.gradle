@@ -21,6 +21,8 @@ allprojects {
         maven {
             url "https://github.com/rosjava/rosjava_mvn_repo/raw/master"
         }
+        google()
+        mavenCentral()
         jcenter()
         maven {
             url 'https://maven.google.com/'
