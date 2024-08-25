@@ -56,8 +56,6 @@ public class Recognition implements Runnable{
     public void loadModel(int id) {
         try {
             String mModelFile = Utils.exportResource(context, id);
-//            MatOfByte buffer = loadFileFromResource(id);
-//            model = Dnn.readNetFromONNX(buffer);
             model = Dnn.readNetFromONNX(mModelFile);
             Log.i("Recognition", "model loaded successfully");
         } catch (Exception e) {
@@ -79,21 +77,15 @@ public class Recognition implements Runnable{
         double yScale = ((double) (img.size().height)) / IN_HEIGHT;
         double xScale = ((double) img.size().width) / IN_WIDTH;
 
-        Log.i("RecognitionTesting", "scales created");
         Mat imgRGB = new Mat();
         Imgproc.cvtColor(img, imgRGB, Imgproc.COLOR_GRAY2RGB);
 
-        Log.i("RecognitionTesting", "image converted to color " + img.channels() + ", " + img.type());
-        Log.i("RecognitionTesting", "color image : " + imgRGB.channels() + ", " + imgRGB.type());
         Mat blob = blobFromImage(imgRGB, IN_SCALE_FACTOR, new Size(new Point(IN_WIDTH, IN_HEIGHT)), new Scalar(MEAN_VAL, MEAN_VAL, MEAN_VAL), true, false);
 
-        Log.i("RecognitionTesting", "created blob");
         model.setInput(blob);
-        Log.i("RecognitionTesting", "set blob as input");
 
         Mat outputs = model.forward();
 
-        Log.i("RecognitionTesting", "Outputs shape : (" + outputs.size().width + " , " + outputs.size().height + ", "+ outputs.channels() + ", " + outputs.total() +")");
         Mat mask = outputs.reshape(0, 1).reshape(0, outputs.size(1));
         Rect2d[] rect2d = new Rect2d[mask.cols()];
         float[] scoref = new float[mask.cols()];
@@ -106,7 +98,7 @@ public class Recognition implements Runnable{
             double[] h = mask.col(i).get(3, 0);
 
             rect2d[i] = new Rect2d((x[0] - w[0]/2) * xScale, (y[0] - h[0]/2) * yScale, w[0] * xScale, h[0] * yScale);
-            Mat score = mask.col(i).submat(4, outputs.size(1), 0, 1); // outputs.size(1) - 1
+            Mat score = mask.col(i).submat(4, outputs.size(1), 0, 1);
             Core.MinMaxLocResult mmr = Core.minMaxLoc(score);
             scoref[i] = (float) mmr.maxVal;
             classid[i] = (int) mmr.maxLoc.y;
@@ -115,7 +107,7 @@ public class Recognition implements Runnable{
         MatOfFloat scores = new MatOfFloat(scoref);
         MatOfInt indeces = new MatOfInt();
 
-        Dnn.NMSBoxes(bboxes, scores, .4f, 0.6f, indeces); //nms = .65
+        Dnn.NMSBoxes(bboxes, scores, .4f, 0.6f, indeces);
         Log.i("RecognitionDebug", "indeces total : " + indeces.total());
         List<Integer> result = indeces.total() > 0 ? indeces.toList() : new ArrayList<Integer>();
 
