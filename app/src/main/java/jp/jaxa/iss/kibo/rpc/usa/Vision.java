@@ -86,12 +86,11 @@ public final class Vision {
         double[] topLeft =  corner.get(0, 0);
         double[] topRight = corner.get(0, 1);
         double[] bottomLeft = corner.get(0, 3);
-        //double[] bottomRight = corner.get(0, 2);
 
         double[] deltaHorizontal = {topLeft[0] - topRight[0], topLeft[1] - topRight[1]};
         double[] deltaVertical = {topLeft[0] - bottomLeft[0], topLeft[1] - bottomLeft[1]};
         double distance = .05;
-        double scale = 1.10; //1.03
+        double scale = 1.10;
 
         double[] dirHorizontal = {deltaHorizontal[0] / distance, deltaHorizontal[1] / distance};
         double[] dirVertical = {deltaVertical[0] / distance, deltaVertical[1] / distance};
@@ -211,26 +210,15 @@ public final class Vision {
         api.flashlightControlFront(.05f);
         while (System.currentTimeMillis() - startTime <= duration) {
             Mat image = api.getMatNavCam();
-//            ArrayList corners = new ArrayList<>();
-//            Mat ids = new Mat();
-//            arucoDetector.detectMarkers(image, corners, ids);
             image = undistort(image);
             ArucoDetection arucoDetection = new ArucoDetection(image, arucoDetector);
 
             if (!arucoDetection.corners.isEmpty()) {
-//                image = undistort(image);
                 api.flashlightControlFront(0.00f);
                 Log.i("Vision", "Target image detected: " + System.currentTimeMillis() + ", " + startTime);
                 return arucoDetection;
-
             }
 
-//            try {
-//                Thread.sleep(250);
-//            } catch (InterruptedException e) {
-//                Log.i("astronautItemWait", "wait failed");
-//                e.printStackTrace();
-//            }
             Movement.wait(.05);
         }
         return null;

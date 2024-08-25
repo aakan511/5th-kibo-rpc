@@ -32,8 +32,6 @@ public class YourService extends KiboRpcService {
 
         (new Thread(r)).start();
         TargetSnapshot snap = new TargetSnapshot(api, r);
-//        Result result = api.flashlightControlFront(.05f);
-//        Log.i("flashlightControlResultOn", "" + result.hasSucceeded());
 
         // Target 1
         goToTarget(0, 1);
@@ -42,7 +40,6 @@ public class YourService extends KiboRpcService {
 
         // Target 2 & 3
         goToTarget(1, 2);
-//        snap.switchToDockCam();
         snap.takeImage(true);
         snap.start();
 
@@ -55,30 +52,6 @@ public class YourService extends KiboRpcService {
         goToTarget(4, 5);
         api.reportRoundingCompletion();
 
-        //Movement.wait(2);
-
-//        api.flashlightControlFront(.01f);
-//        Mat image = null;
-////        try {
-////            // will wait 30 seconds for aruco to appear
-////            // image is first set to null, but there is no chance no target image will be found (Just for error handling purposes)
-////            image = Vision.waitForTarget(30);
-////        } catch (InterruptedException e) {
-////            e.printStackTrace();
-////        }
-//
-//        if (image != null) {
-//            r.identify(image);
-//        } else {
-//            Log.i("Vision", "No target image detected");
-//        }
-        //Mat image = api.getMatNavCam();
-        // image = Vision.undistort(image);
-//        Vision.findAruco(image);
-//        api.saveMatImage(image, "front5.jpg");
-
-        // Target item....
-//        r.finalTarget = 3;
         ArucoDetection arucoDetection = v.waitForTarget(30);
         if (arucoDetection != null) {
             r.identify(arucoDetection.corners, arucoDetection.ids, arucoDetection.image);
@@ -101,16 +74,6 @@ public class YourService extends KiboRpcService {
             moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "finalAdjustment");
         }
 
-//        api.flashlightControlFront(.01f);
-//        image = api.getMatNavCam();
-
-        //FOR DEBUG ONLY REMOVE LATER
-//        distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
-//        Vision.targetItemReadjust(distanceTargetItem[1]);
-//
-//        image = Vision.undistort(image);
-//        api.saveMatImage(image, "front7_" + Vision.randName() + "_.jpg");
-//
         api.takeTargetItemSnapshot();
     }
 
@@ -149,6 +112,7 @@ class TargetSnapshot extends Thread{
 
         snapshotFront = true; //for next image
         Vision.currTarget++;
+
     }
 
     public void takeImage(boolean takeWithFront) {
@@ -158,6 +122,8 @@ class TargetSnapshot extends Thread{
         image = snapshotFront ? api.getMatNavCam() : api.getMatDockCam();
         result = snapshotFront ? api.flashlightControlFront(.00f) : api.flashlightControlBack(.00f);
         Log.i("flashlightControlResultOff", result.toString());
+
+
     }
 
 }
