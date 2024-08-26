@@ -69,12 +69,14 @@ public final class Vision {
 
 
     public static Mat undistort(Mat src){
+        if (src == null) return null;
         Mat dst = new Mat();
         Calib3d.undistort(src, dst, camMat, distortionCoefficients);
         return dst;
     }
 
     public static Mat undistortRear(Mat src){
+        if (src == null) return null;
         Mat dst = new Mat();
         Calib3d.undistort(src, dst, rearCamMat, rearDistortionCoefficients);
         return dst;
@@ -196,12 +198,6 @@ public final class Vision {
         Log.i("TargetItemStats", "distance : " + dist + ", angle : " + angle + ", will be readjusting : " + result);
 
         return result;
-    }
-
-
-    public static String randName () {
-        int random = (int) (Math.random() * 10000000);
-        return "" + random;
     }
 
     public static ArucoDetection waitForTarget(int seconds){

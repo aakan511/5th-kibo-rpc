@@ -8,6 +8,7 @@ import jp.jaxa.iss.kibo.rpc.api.KiboRpcService;
 
 import gov.nasa.arc.astrobee.types.Point;
 
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 import static jp.jaxa.iss.kibo.rpc.usa.Movement.goToTarget;
@@ -50,6 +51,7 @@ public class YourService extends KiboRpcService {
 
         // Astronaut
         goToTarget(4, 5);
+        r.fillBlanks();
         api.reportRoundingCompletion();
 
         ArucoDetection arucoDetection = v.waitForTarget(30);
@@ -58,6 +60,8 @@ public class YourService extends KiboRpcService {
         } else {
             Log.i("ASTRONAUTERROR", "Astronaut Aruco not found");
         }
+
+        api.notifyRecognitionItem();
 
         goToTarget(5, r.finalTarget);
 
@@ -106,7 +110,7 @@ class TargetSnapshot extends Thread{
         int target = Vision.currTarget;
 
         image = snapshotFront ? Vision.undistort(image) : Vision.undistortRear(image);
-        api.saveMatImage(image, "front" + target + "_" + Vision.randName() + ".jpg");
+        api.saveMatImage(image, "front" + target + "_" + ".jpg");
 
         r.identify(image);
 
@@ -119,6 +123,7 @@ class TargetSnapshot extends Thread{
         snapshotFront = takeWithFront;
         Result result = snapshotFront ? api.flashlightControlFront(.05f) : api.flashlightControlBack(.05f);
         Log.i("flashlightControlResultOn", result.toString());
+        //image = new Mat(1280, 960, CvType.CV_8UC(3));//null;
         image = snapshotFront ? api.getMatNavCam() : api.getMatDockCam();
         result = snapshotFront ? api.flashlightControlFront(.00f) : api.flashlightControlBack(.00f);
         Log.i("flashlightControlResultOff", result.toString());

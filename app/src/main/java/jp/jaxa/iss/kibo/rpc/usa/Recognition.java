@@ -158,22 +158,21 @@ public class Recognition implements Runnable{
                 Mat clean = new Mat();
                 in.copyTo(clean);
                 clean = Vision.arucoCrop(clean, corners.get(i));
-                api.saveMatImage(clean, "target_" + ((int) (ids.get(i, 0)[0] - 100)) + "_" + Vision.randName() + "_cropped.png");
+                api.saveMatImage(clean, "target_" + ((int) (ids.get(i, 0)[0] - 100)) + "_cropped.png");
                 RecognitionResult result = findTarget(clean, currTarget);
                 if (currTarget != 0 && targets[currTarget - 1] == null) {
                     api.setAreaInfo(currTarget, result.category, result.numObjects);
                     targets[currTarget - 1] = result;
                 } else if (currTarget == 0){
-                    api.reportRoundingCompletion();
                     for (int j = 0; j < targets.length; j++) {
                         if (targets[j] == null) {
-                            targets[j] = new RecognitionResult(new Mat(), 0, "beaker");
+                            targets[j] = new RecognitionResult(new Mat(), 2, "hammer", true);
                         }
                         if (result.category.equals(targets[j].category)) {
                             finalTarget = j + 1;
                             return;
                         }
-                        if (finalTarget == 4 && targets[j].numObjects == 0 && targets[j].category.equals("beaker")) {
+                        if (finalTarget == 4 && targets[j].errorDetected) {
                             finalTarget = j + 1;
                             Log.i("RECOGNITION_DEBUG", "defaulted to unknown target");
                         }
@@ -182,16 +181,33 @@ public class Recognition implements Runnable{
             }
         }
     }
-}
+
+    public void fillBlanks() {
+        for (int i = 0; i < targets.length; i++) {
+            if (targets[i] == null) {
+                targets[i] = new RecognitionResult(new Mat(), 2, "hammer", true);
+                api.setAreaInfo(i + 1, targets[i].category, targets[i].numObjects);
+            }
+        }
+    }
+ }
 
 class RecognitionResult {
     Mat img;
     int numObjects;
     String category;
+    boolean errorDetected;
 
     public RecognitionResult (Mat in, int num, String c) {
         img = in;
         numObjects = num;
         category = c;
+        errorDetected = false;
     }
+
+    public RecognitionResult (Mat in, int num, String c, boolean errorDetected) {
+        this(in, num, c);
+        this.errorDetected = errorDetected;
+    }
+
 }
