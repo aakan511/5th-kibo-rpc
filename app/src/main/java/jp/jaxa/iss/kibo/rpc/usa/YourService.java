@@ -123,6 +123,7 @@ class TargetSnapshot extends Thread{
         snapshotFront = takeWithFront;
         Result result = snapshotFront ? api.flashlightControlFront(.05f) : api.flashlightControlBack(.05f);
         Log.i("flashlightControlResultOn", result.toString());
+        //image = new Mat(1280, 960, CvType.CV_8UC(3));//null;
         image = snapshotFront ? api.getMatNavCam() : api.getMatDockCam();
         result = snapshotFront ? api.flashlightControlFront(.00f) : api.flashlightControlBack(.00f);
         Log.i("flashlightControlResultOff", result.toString());
