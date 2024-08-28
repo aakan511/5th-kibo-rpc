@@ -73,8 +73,6 @@ public class YourService extends KiboRpcService {
             Log.i("adjustment", "(" + adjustment.getX() + ", " + adjustment.getY() + ", " + adjustment.getZ() + ")");
             Point currPos = api.getRobotKinematics().getPosition();
             Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
-//        image = Vision.undistort(image);
-//        api.saveMatImage(image, "front6.jpg");
             moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "finalAdjustment");
         }
 
@@ -123,7 +121,6 @@ class TargetSnapshot extends Thread{
         snapshotFront = takeWithFront;
         Result result = snapshotFront ? api.flashlightControlFront(.05f) : api.flashlightControlBack(.05f);
         Log.i("flashlightControlResultOn", result.toString());
-        //image = new Mat(1280, 960, CvType.CV_8UC(3));//null;
         image = snapshotFront ? api.getMatNavCam() : api.getMatDockCam();
         result = snapshotFront ? api.flashlightControlFront(.00f) : api.flashlightControlBack(.00f);
         Log.i("flashlightControlResultOff", result.toString());

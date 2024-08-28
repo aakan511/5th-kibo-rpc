@@ -205,17 +205,23 @@ public final class Vision {
         long startTime = System.currentTimeMillis();
         api.flashlightControlFront(.05f);
         while (System.currentTimeMillis() - startTime <= duration) {
-            Mat image = api.getMatNavCam();
-            image = undistort(image);
-            ArucoDetection arucoDetection = new ArucoDetection(image, arucoDetector);
+            try {
+                Mat image = api.getMatNavCam();
+                image = undistort(image);
+                ArucoDetection arucoDetection = new ArucoDetection(image, arucoDetector);
 
-            if (!arucoDetection.corners.isEmpty()) {
-                api.flashlightControlFront(0.00f);
-                Log.i("Vision", "Target image detected: " + System.currentTimeMillis() + ", " + startTime);
-                return arucoDetection;
+                if (!arucoDetection.corners.isEmpty()) {
+                    api.flashlightControlFront(0.00f);
+                    Log.i("Vision", "Target image detected: " + System.currentTimeMillis() + ", " + startTime);
+                    return arucoDetection;
+                }
+
+                Movement.wait(.05);
+            }
+            catch (Exception e){
+                Log.i("ERROR", e.toString());
             }
 
-            Movement.wait(.05);
         }
         return null;
     }
