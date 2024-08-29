@@ -170,7 +170,7 @@ public final class Vision {
             }
         }
         Log.i("ERROR", currTarget + " target's aruco marker not found");
-        return new gov.nasa.arc.astrobee.types.Point[]{new gov.nasa.arc.astrobee.types.Point()};
+        return null;
     }
 
 

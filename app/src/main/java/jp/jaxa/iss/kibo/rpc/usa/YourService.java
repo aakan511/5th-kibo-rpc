@@ -68,7 +68,7 @@ public class YourService extends KiboRpcService {
         api.flashlightControlFront(.05f);
         Mat image = api.getMatNavCam();
         Point[] distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
-        if (Vision.targetItemReadjust(distanceTargetItem[1])) {
+        if (distanceTargetItem != null && Vision.targetItemReadjust(distanceTargetItem[1])) {
             Point adjustment = distanceTargetItem[0];
             Log.i("adjustment", "(" + adjustment.getX() + ", " + adjustment.getY() + ", " + adjustment.getZ() + ")");
             Point currPos = api.getRobotKinematics().getPosition();
