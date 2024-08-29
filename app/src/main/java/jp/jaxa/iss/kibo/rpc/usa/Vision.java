@@ -178,12 +178,15 @@ public final class Vision {
         if (p == null) {
             Log.i("ERRORERROR", "point passed into distance is null");
             return 0;
-
         }
         return Math.sqrt(p.getX() * p.getX() + p.getY() * p.getY() + p.getZ() * p.getZ());
     }
 
     public static double angle(gov.nasa.arc.astrobee.types.Point p) {
+        if (p == null) {
+            Log.i("ERRORERROR", "point passed into angle is null");
+            return 0;
+        }
         double distXY = distance (new gov.nasa.arc.astrobee.types.Point(p.getX(), p.getY(), 0));
         double angle = Math.toDegrees((Math.atan(distXY/p.getZ())));
 
@@ -221,7 +224,6 @@ public final class Vision {
             catch (Exception e){
                 Log.i("ERROR", e.toString());
             }
-
         }
         return null;
     }

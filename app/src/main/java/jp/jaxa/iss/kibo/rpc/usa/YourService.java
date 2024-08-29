@@ -114,7 +114,6 @@ class TargetSnapshot extends Thread{
 
         snapshotFront = true; //for next image
         Vision.currTarget++;
-
     }
 
     public void takeImage(boolean takeWithFront) {
@@ -124,9 +123,5 @@ class TargetSnapshot extends Thread{
         image = snapshotFront ? api.getMatNavCam() : api.getMatDockCam();
         result = snapshotFront ? api.flashlightControlFront(.00f) : api.flashlightControlBack(.00f);
         Log.i("flashlightControlResultOff", result.toString());
-
-
     }
-
 }
-
