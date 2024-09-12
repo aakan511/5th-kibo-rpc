@@ -56,4 +56,6 @@ dependencies {
     testCompile 'junit:junit:4.12'
     implementation files('libs/opencv-4.9.0.aar')
 
+    implementation 'org.tensorflow:tensorflow-lite-task-vision:0.4.0'
+
 }

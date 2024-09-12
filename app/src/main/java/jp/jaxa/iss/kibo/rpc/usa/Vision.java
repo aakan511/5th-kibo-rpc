@@ -16,7 +16,9 @@ import org.opencv.objdetect.ArucoDetector;
 import org.opencv.objdetect.Dictionary;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import jp.jaxa.iss.kibo.rpc.api.KiboRpcApi;
 
@@ -33,6 +35,7 @@ public final class Vision {
     public static Dictionary dict = getPredefinedDictionary(DICT_5X5_250);
     public static ArucoDetector arucoDetector = new ArucoDetector(dict);
     public static int currTarget = 1;
+    public static int cnt = 0;
 
     public Vision(KiboRpcApi api) {
         OpenCVLoader.initLocal();
@@ -153,12 +156,29 @@ public final class Vision {
 
                 double[] centerAdj = {(.1375 * deltaHorizontal[0]) + (-.0375 * deltaVertical[0]), (.1375 * deltaHorizontal[1]) + (-.0375 * deltaVertical[1])};
 
+
+
                 double[] pt = tvec.row(i).get(0, 0);
                 pt[0] = pt[0] + centerAdj[0];
                 pt[1] = pt[1] + centerAdj[1];
                 gov.nasa.arc.astrobee.types.Point dist =  new gov.nasa.arc.astrobee.types.Point(pt[0], pt[1], pt[2]);
 
                 pt[2] = 0;
+
+
+                //save annotated image:
+                double horizontalFactor = distHorizontal / .05;
+                double verticalFactor = distVertical / .05;
+                double[] pixelCenter = {topLeft[0] + (centerAdj[0] * horizontalFactor), topLeft[1] + (centerAdj[1] * verticalFactor)};
+                String label = String.format("distance: %.2f", distance(dist));
+                img = Vision.undistort(img);
+                Imgproc.cvtColor(img, img, Imgproc.COLOR_GRAY2RGB);
+                Imgproc.line(img, new Point(topLeft[0], topLeft[1]), new Point(pixelCenter[0], pixelCenter[1]), new Scalar(255, 0, 0), 2);
+                Imgproc.putText(img, label, new Point(topLeft[0] - 10, topLeft[1] - 10), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, new Scalar(255, 0, 0), 2);
+                label = String.format("angle: %.2f", angle(dist));
+                Imgproc.putText(img, label, new Point(topLeft[0] + 10, topLeft[1] + 10), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, new Scalar(255, 0, 0), 2);
+                api.saveMatImage(img,"arucoDistance_" + target + "_"+ cnt++ + ".jpg");
+                //end annotating image
 
                 if (target == 1) {
                     return new gov.nasa.arc.astrobee.types.Point[]{new gov.nasa.arc.astrobee.types.Point(pt[0], -pt[2], pt[1]), dist};
@@ -227,6 +247,7 @@ public final class Vision {
         }
         return null;
     }
+
 }
 
 class ArucoDetection {

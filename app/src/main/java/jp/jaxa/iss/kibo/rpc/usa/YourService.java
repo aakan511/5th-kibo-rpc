@@ -75,6 +75,8 @@ public class YourService extends KiboRpcService {
             Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
             moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "finalAdjustment");
         }
+        image = api.getMatNavCam();
+        distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
 
         api.takeTargetItemSnapshot();
     }
