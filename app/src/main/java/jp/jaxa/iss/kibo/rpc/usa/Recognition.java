@@ -24,6 +24,8 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.ArucoDetector;
 import org.tensorflow.lite.task.vision.detector.ObjectDetector;
 
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,21 +88,25 @@ public class Recognition implements Runnable{
     }
 
     public void loadModel(int id) {
-//        try {
-//            String mModelFile = Utils.exportResource(context, id);
-//            model = Dnn.readNetFromONNX(mModelFile);
-//            Log.i("Recognition", "model loaded successfully");
-//        } catch (Exception e) {
-//            Log.i("ERROR", e.getMessage());
-//        }
         BaseOptions baseOptionsBuilder = BaseOptions.builder().setNumThreads(4).build();
         ObjectDetector.ObjectDetectorOptions optionsBuilder = ObjectDetector.ObjectDetectorOptions.builder()
                 .setScoreThreshold(0.5f)
                 .setMaxResults(3).setBaseOptions(baseOptionsBuilder).build();
 
         try {
-            String mModelFile = Utils.exportResource(context, id);
-            objectDetector = ObjectDetector.createFromFileAndOptions(context, mModelFile, optionsBuilder);
+            //String mModelFile = Utils.exportResource(context, id);
+
+
+            InputStream is = context.getResources().openRawResource(id);
+//            byte[] targetArray = new byte[is.available()];
+//            is.read(targetArray);
+
+            ByteBuffer bb = ByteBuffer.allocate(is.available());
+            while (is.available() > 0) {
+                bb.put((byte) is.read());
+            }
+//            objectDetector = ObjectDetector.createFromFileAndOptions(context, mModelFile, optionsBuilder);
+            objectDetector = ObjectDetector.createFromBufferAndOptions(bb, optionsBuilder);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -119,7 +125,7 @@ public class Recognition implements Runnable{
         TensorImage tensorImage = imageProcessor.process(TensorImage.fromBitmap(bmp));
 
         List<Detection> results = objectDetector.detect(tensorImage);
-
+        Log.i("TFLite results", " " + results.size());
 
         return null;
     }
@@ -220,7 +226,7 @@ public class Recognition implements Runnable{
                 in.copyTo(clean);
                 clean = Vision.arucoCrop(clean, corners.get(i));
                 api.saveMatImage(clean, "target_" + ((int) (ids.get(i, 0)[0] - 100)) + "_cropped.png");
-                RecognitionResult result = findTarget(clean, currTarget);
+                RecognitionResult result = detect(clean, currTarget);//findTarget(clean, currTarget);
                 if (currTarget != 0 && targets[currTarget - 1] == null) {
                     api.setAreaInfo(currTarget, result.category, result.numObjects);
                     targets[currTarget - 1] = result;
