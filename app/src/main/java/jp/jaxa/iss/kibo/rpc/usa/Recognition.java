@@ -1,6 +1,9 @@
 package jp.jaxa.iss.kibo.rpc.usa;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.util.Log;
 
 
@@ -19,7 +22,10 @@ import org.opencv.dnn.Net;
 import org.opencv.dnn.Dnn;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.ArucoDetector;
+import org.tensorflow.lite.task.vision.detector.ObjectDetector;
 
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +34,21 @@ import jp.jaxa.iss.kibo.rpc.api.KiboRpcApi;
 import static org.opencv.dnn.Dnn.blobFromImage;
 import static org.opencv.objdetect.Objdetect.DICT_5X5_250;
 import static org.opencv.objdetect.Objdetect.getPredefinedDictionary;
+
+
+//import org.jboss.netty.buffer.ChannelBuffer;
+//import org.ros.message.MessageListener;
+//import org.ros.namespace.GraphName;
+//import org.ros.node.AbstractNodeMain;
+//import org.ros.node.ConnectedNode;
+//import org.ros.node.Node;
+//import org.ros.node.topic.Subscriber;
+import org.tensorflow.lite.support.image.ImageProcessor;
+import org.tensorflow.lite.support.image.TensorImage;
+import org.tensorflow.lite.support.label.Category;
+import org.tensorflow.lite.task.core.BaseOptions;
+import org.tensorflow.lite.task.vision.detector.Detection;
+import org.tensorflow.lite.task.vision.detector.ObjectDetector;
 
 public class Recognition implements Runnable{
     public String[] classNames;
@@ -39,6 +60,13 @@ public class Recognition implements Runnable{
     public int finalTarget;
     public int id;
 
+    public Paint paint;
+    public ObjectDetector objectDetector;
+    public ImageProcessor imageProcessor;
+    public boolean saveImages;
+    public boolean processImages;
+
+
     public Recognition(Context c, int id, String[] names, KiboRpcApi api) {
         Log.i("RecognitionDebug", "Recognition constructor began");
         classNames = names;
@@ -47,6 +75,12 @@ public class Recognition implements Runnable{
         this.api = api;
         finalTarget = 4;
 
+        //new stuff
+        paint = new Paint();
+        paint.setColor(Color.RED);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(3);
+
     }
 
     public void run() {
@@ -54,15 +88,47 @@ public class Recognition implements Runnable{
     }
 
     public void loadModel(int id) {
+        BaseOptions baseOptionsBuilder = BaseOptions.builder().setNumThreads(4).build();
+        ObjectDetector.ObjectDetectorOptions optionsBuilder = ObjectDetector.ObjectDetectorOptions.builder()
+                .setScoreThreshold(0.5f)
+                .setMaxResults(3).setBaseOptions(baseOptionsBuilder).build();
+
         try {
-            String mModelFile = Utils.exportResource(context, id);
-            model = Dnn.readNetFromONNX(mModelFile);
-            Log.i("Recognition", "model loaded successfully");
+            //String mModelFile = Utils.exportResource(context, id);
+
+
+            InputStream is = context.getResources().openRawResource(id);
+//            byte[] targetArray = new byte[is.available()];
+//            is.read(targetArray);
+
+            ByteBuffer bb = ByteBuffer.allocate(is.available());
+            while (is.available() > 0) {
+                bb.put((byte) is.read());
+            }
+//            objectDetector = ObjectDetector.createFromFileAndOptions(context, mModelFile, optionsBuilder);
+            objectDetector = ObjectDetector.createFromBufferAndOptions(bb, optionsBuilder);
         } catch (Exception e) {
-            Log.i("ERROR", e.getMessage());
+            e.printStackTrace();
         }
+
+        imageProcessor = new ImageProcessor.Builder().build();
     }
 
+    public RecognitionResult detect(Mat img, int id) {
+        if (objectDetector == null) {
+            Log.i("ERROR", "objectDetector is null");
+            return null;
+        }
+        Bitmap bmp = Bitmap.createBitmap(img.width(), img.height(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(img, bmp);
+
+        TensorImage tensorImage = imageProcessor.process(TensorImage.fromBitmap(bmp));
+
+        List<Detection> results = objectDetector.detect(tensorImage);
+        Log.i("TFLite results", " " + results.size());
+
+        return null;
+    }
 
     public RecognitionResult findTarget(Mat img, int id) {
         if (model == null) {
@@ -143,6 +209,7 @@ public class Recognition implements Runnable{
     }
 
     public void identify (Mat in){
+        if (in == null) return;
         List<Mat> corners = new ArrayList<>();
         Mat ids = new Mat();
 
@@ -158,22 +225,21 @@ public class Recognition implements Runnable{
                 Mat clean = new Mat();
                 in.copyTo(clean);
                 clean = Vision.arucoCrop(clean, corners.get(i));
-                api.saveMatImage(clean, "target_" + ((int) (ids.get(i, 0)[0] - 100)) + "_" + Vision.randName() + "_cropped.png");
-                RecognitionResult result = findTarget(clean, currTarget);
+                api.saveMatImage(clean, "target_" + ((int) (ids.get(i, 0)[0] - 100)) + "_cropped.png");
+                RecognitionResult result = detect(clean, currTarget);//findTarget(clean, currTarget);
                 if (currTarget != 0 && targets[currTarget - 1] == null) {
                     api.setAreaInfo(currTarget, result.category, result.numObjects);
                     targets[currTarget - 1] = result;
                 } else if (currTarget == 0){
-                    api.reportRoundingCompletion();
                     for (int j = 0; j < targets.length; j++) {
                         if (targets[j] == null) {
-                            targets[j] = new RecognitionResult(new Mat(), 0, "beaker");
+                            targets[j] = new RecognitionResult(new Mat(), 2, "hammer", true);
                         }
                         if (result.category.equals(targets[j].category)) {
                             finalTarget = j + 1;
                             return;
                         }
-                        if (finalTarget == 4 && targets[j].numObjects == 0 && targets[j].category.equals("beaker")) {
+                        if (finalTarget == 4 && targets[j].errorDetected) {
                             finalTarget = j + 1;
                             Log.i("RECOGNITION_DEBUG", "defaulted to unknown target");
                         }
@@ -182,16 +248,33 @@ public class Recognition implements Runnable{
             }
         }
     }
-}
+
+    public void fillBlanks() {
+        for (int i = 0; i < targets.length; i++) {
+            if (targets[i] == null) {
+                targets[i] = new RecognitionResult(new Mat(), 2, "hammer", true);
+                api.setAreaInfo(i + 1, targets[i].category, targets[i].numObjects);
+            }
+        }
+    }
+ }
 
 class RecognitionResult {
     Mat img;
     int numObjects;
     String category;
+    boolean errorDetected;
 
     public RecognitionResult (Mat in, int num, String c) {
         img = in;
         numObjects = num;
         category = c;
+        errorDetected = false;
     }
+
+    public RecognitionResult (Mat in, int num, String c, boolean errorDetected) {
+        this(in, num, c);
+        this.errorDetected = errorDetected;
+    }
+
 }

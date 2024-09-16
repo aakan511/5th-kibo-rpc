@@ -8,6 +8,7 @@ import jp.jaxa.iss.kibo.rpc.api.KiboRpcService;
 
 import gov.nasa.arc.astrobee.types.Point;
 
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 import static jp.jaxa.iss.kibo.rpc.usa.Movement.goToTarget;
@@ -27,7 +28,7 @@ public class YourService extends KiboRpcService {
         Movement.api = api;
         Vision v = new Vision(api);
 
-        Recognition r = new Recognition(getApplicationContext(), R.raw.blinker, new String[]{"beaker", "pipette", "goggle", "hammer", "kapton_tape", "screwdriver", "thermometer",
+        Recognition r = new Recognition(getApplicationContext(), R.raw.izbushka, new String[]{"beaker", "pipette", "goggle", "hammer", "kapton_tape", "screwdriver", "thermometer",
                 "top", "watch", "wrench"}, api);
 
         (new Thread(r)).start();
@@ -50,6 +51,7 @@ public class YourService extends KiboRpcService {
 
         // Astronaut
         goToTarget(4, 5);
+        r.fillBlanks();
         api.reportRoundingCompletion();
 
         ArucoDetection arucoDetection = v.waitForTarget(30);
@@ -59,20 +61,22 @@ public class YourService extends KiboRpcService {
             Log.i("ASTRONAUTERROR", "Astronaut Aruco not found");
         }
 
+        api.notifyRecognitionItem();
+
         goToTarget(5, r.finalTarget);
 
         api.flashlightControlFront(.05f);
         Mat image = api.getMatNavCam();
         Point[] distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
-        if (Vision.targetItemReadjust(distanceTargetItem[1])) {
+        if (distanceTargetItem != null && Vision.targetItemReadjust(distanceTargetItem[1])) {
             Point adjustment = distanceTargetItem[0];
             Log.i("adjustment", "(" + adjustment.getX() + ", " + adjustment.getY() + ", " + adjustment.getZ() + ")");
             Point currPos = api.getRobotKinematics().getPosition();
             Point absPos = new Point(currPos.getX() + adjustment.getX(), currPos.getY() + adjustment.getY(), currPos.getZ() + adjustment.getZ());
-//        image = Vision.undistort(image);
-//        api.saveMatImage(image, "front6.jpg");
             moveAstrobee(absPos, api.getRobotKinematics().getOrientation(), 'A', false, "finalAdjustment");
         }
+        image = api.getMatNavCam();
+        distanceTargetItem = Vision.arucoOffsetCenter(image, r.finalTarget);
 
         api.takeTargetItemSnapshot();
     }
@@ -106,13 +110,12 @@ class TargetSnapshot extends Thread{
         int target = Vision.currTarget;
 
         image = snapshotFront ? Vision.undistort(image) : Vision.undistortRear(image);
-        api.saveMatImage(image, "front" + target + "_" + Vision.randName() + ".jpg");
+        api.saveMatImage(image, "front" + target + "_" + ".jpg");
 
         r.identify(image);
 
         snapshotFront = true; //for next image
         Vision.currTarget++;
-
     }
 
     public void takeImage(boolean takeWithFront) {
@@ -122,9 +125,5 @@ class TargetSnapshot extends Thread{
         image = snapshotFront ? api.getMatNavCam() : api.getMatDockCam();
         result = snapshotFront ? api.flashlightControlFront(.00f) : api.flashlightControlBack(.00f);
         Log.i("flashlightControlResultOff", result.toString());
-
-
     }
-
 }
-
